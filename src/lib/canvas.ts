@@ -11,20 +11,6 @@ export function withCanvas(
   callback(context);
 }
 
-export function createRectangle(
-  x: number,
-  y: number,
-  width: number,
-  height: number
-): Rectangle {
-  return {
-    x,
-    y,
-    width,
-    height,
-  };
-}
-
 export function mouse2canvas(e: MouseEvent, canvas: HTMLCanvasElement): Point {
   const bounds = canvas.getBoundingClientRect();
 

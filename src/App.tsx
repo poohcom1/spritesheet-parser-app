@@ -1,8 +1,8 @@
-import MSER from "blob-detection-mser";
 import React, { useCallback, useState } from "react";
 import "./App.css";
 import SelectionCanvas from "./components/SelectionCanvas/SelectionCanvas";
 import { getBinaryImage, getImageData } from "./lib/image";
+import MSER, { Rect } from "blob-detection-ts";
 
 function App() {
   const [allRects, setAllRects] = useState<Rect[]>([]);
@@ -39,6 +39,7 @@ function App() {
         type="file"
         onChange={(e) => onFileChange(e.target.files && e.target.files[0])}
       />
+
       {imageData && <SelectionCanvas image={imageData} rects={allRects} />}
     </div>
   );

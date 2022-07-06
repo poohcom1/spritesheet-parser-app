@@ -12,7 +12,7 @@
     "@types/node": "^16.11.43",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
-    "blob-detection-mser": "^0.0.11",
+    "blob-detection-ts": "^0.0.3",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
