@@ -1,9 +1,12 @@
 import MSER from "blob-detection-mser";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useState } from "react";
+import "./App.css";
+import SelectionCanvas from "./components/SelectionCanvas/SelectionCanvas";
 import { getBinaryImage, getImageData } from "./lib/image";
 
 function App() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [allRects, setAllRects] = useState<Rect[]>([]);
+  const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
   const onFileChange = useCallback(async (file: File | null) => {
     if (!file) return;
@@ -25,21 +28,18 @@ function App() {
       mser.drawRectOutline(rect, [255, 0, 0, 255], imgData);
     });
 
-    const context = canvasRef.current?.getContext("2d");
-
-    if (context) {
-      context.putImageData(imgData, 0, 0);
-    }
+    setAllRects(rects);
+    setImageData(imgData);
   }, []);
 
   return (
     <div>
+      <h2>Spritesheet Parser</h2>
       <input
         type="file"
         onChange={(e) => onFileChange(e.target.files && e.target.files[0])}
       />
-      <br></br>
-      <canvas ref={canvasRef} width={1000} height={3000} />
+      {imageData && <SelectionCanvas image={imageData} rects={allRects} />}
     </div>
   );
 }
