@@ -70,8 +70,13 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
       mser.drawRectOutline(rect, [255, 0, 0, 255], rectImage);
     });
 
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    canvas.getContext("2d")?.putImageData(rectImage, 0, 0);
+
     withCanvas(imageCanvasRef.current, (context) => {
-      context.putImageData(rectImage, 0, 0);
+      context.drawImage(canvas, 0, 0);
     });
   }, [image, rects]);
 
