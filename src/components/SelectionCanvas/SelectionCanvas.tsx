@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import styled from "styled-components";
-import { Rect } from "blob-detection-ts";
+import MSER, { Rect } from "blob-detection-ts";
 import { mouse2canvas, withCanvas } from "../../lib/canvas";
 
 const CanvasLayer = styled.canvas<{ zIndex: number }>`
@@ -25,9 +25,17 @@ const CanvasContainer = styled.div<{ width: number; height: number }>`
 interface SelectionCanvasProps {
   image: ImageData;
   rects: Rect[];
+  selectedRects: Rect[];
+
+  onSelect(rects: Rect[]): void;
 }
 
-const SelectionCanvas: FC<SelectionCanvasProps> = ({ image, rects }) => {
+const SelectionCanvas: FC<SelectionCanvasProps> = ({
+  image,
+  rects,
+  selectedRects,
+  onSelect,
+}) => {
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const rectsCanvasRef = useRef<HTMLCanvasElement>(null);
   const selectionCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -35,14 +43,24 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({ image, rects }) => {
   const anchorRef = useRef<Point | undefined>();
   const [selection, setSelection] = useState<Rect>(new Rect());
 
-  const [selectedRects, setSelectedRects] = useState<Rect[]>([]);
-
   // Image canvas
   useEffect(() => {
-    withCanvas(imageCanvasRef.current, (context) => {
-      context.putImageData(image, 0, 0);
+    const rectImage = new ImageData(
+      new Uint8ClampedArray(image.data),
+      image.width,
+      image.height
+    );
+
+    const mser = new MSER();
+
+    rects.forEach((rect) => {
+      mser.drawRectOutline(rect, [255, 0, 0, 255], rectImage);
     });
-  }, [image]);
+
+    withCanvas(imageCanvasRef.current, (context) => {
+      context.putImageData(rectImage, 0, 0);
+    });
+  }, [image, rects]);
 
   // Rects canvas
   useEffect(() => {
@@ -71,12 +89,15 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({ image, rects }) => {
     });
   }, [selection]);
 
-  const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback((e) => {
-    if (selectionCanvasRef.current) {
-      anchorRef.current = mouse2canvas(e, selectionCanvasRef.current);
-      setSelectedRects([]);
-    }
-  }, []);
+  const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback(
+    (e) => {
+      if (selectionCanvasRef.current) {
+        anchorRef.current = mouse2canvas(e, selectionCanvasRef.current);
+        onSelect([]);
+      }
+    },
+    [onSelect]
+  );
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
@@ -99,11 +120,11 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({ image, rects }) => {
           }
         }
 
-        setSelectedRects(intersects);
         setSelection(new Rect(left, top, width, height));
+        onSelect(intersects);
       }
     },
-    [rects, selection]
+    [onSelect, rects, selection]
   );
 
   const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback((e) => {

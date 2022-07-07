@@ -5,3 +5,14 @@ interface Point {
   x: number;
   y: number;
 }
+
+interface Sprites {
+  name: string;
+  rects: Rect[];
+}
+
+interface Sheet {
+  image: ImageData;
+  name: string;
+  animations: Sprites[];
+}
