@@ -1,6 +1,6 @@
 import { createContext } from "react";
 
-interface SheetContextType {
+export interface SheetContextType {
   sheets: Sheet[];
   selectedSheet: number;
   selectedAnimation: number;

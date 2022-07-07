@@ -9,17 +9,19 @@ import {
 import styled from "styled-components";
 import MSER, { Rect } from "blob-detection-ts";
 import { mouse2canvas, withCanvas } from "../../lib/canvas";
+import EditorCanvas from "../../components/EditorCanvas/EditorCanvas";
+import { useContext } from "react";
+import EditorContext from "../../context/EditorContext";
 
-const CanvasLayer = styled.canvas<{ zIndex: number }>`
+const CanvasLayer = styled(EditorCanvas)<{ z: number }>`
   position: absolute;
-  z-index: ${(props) => props.zIndex};
+  z-index: ${(props) => props.z};
 `;
 
 const CanvasContainer = styled.div<{ width: number; height: number }>`
   position: relative;
   width: ${(props) => props.width}px;
   height: ${(props) => props.height}px;
-  background-color: white;
 `;
 
 interface SelectionCanvasProps {
@@ -36,12 +38,23 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   selectedRects,
   onSelect,
 }) => {
+  // Editor context
+  const editorContext = useContext(EditorContext).editorContext;
+
+  const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const rectsCanvasRef = useRef<HTMLCanvasElement>(null);
   const selectionCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const anchorRef = useRef<Point | undefined>();
   const [selection, setSelection] = useState<Rect>(new Rect());
+
+  useEffect(() => {
+    withCanvas(bgCanvasRef.current, (context) => {
+      context.fillStyle = "white";
+      context.fillRect(0, 0, context.canvas.width, context.canvas.height);
+    });
+  }, []);
 
   // Image canvas
   useEffect(() => {
@@ -127,7 +140,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     [onSelect, rects, selection]
   );
 
-  const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback((e) => {
+  const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(() => {
     anchorRef.current = undefined;
     setSelection(new Rect(0, 0, 0, 0));
   }, []);
@@ -135,19 +148,29 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   return (
     <CanvasContainer width={image.width} height={image.height}>
       <CanvasLayer
-        zIndex={0}
+        zoom={1}
+        z={0}
+        ref={bgCanvasRef}
+        width={image.width}
+        height={image.height}
+      />
+      <CanvasLayer
+        zoom={editorContext.zoom}
+        z={1}
         ref={imageCanvasRef}
         width={image.width}
         height={image.height}
       />
       <CanvasLayer
-        zIndex={1}
+        zoom={editorContext.zoom}
+        z={2}
         ref={rectsCanvasRef}
         width={image.width}
         height={image.height}
       />
       <CanvasLayer
-        zIndex={2}
+        zoom={editorContext.zoom}
+        z={3}
         ref={selectionCanvasRef}
         width={image.width}
         height={image.height}

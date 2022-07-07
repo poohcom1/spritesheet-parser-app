@@ -1,14 +1,14 @@
-import { FC, ReactNode } from "react";
-import { Button } from "react-bootstrap";
+import { FC, ReactNode, useContext } from "react";
 import styled from "styled-components";
+import EditorContext from "../context/EditorContext";
 
 interface EditorProps {
   screenElement: JSX.Element;
   panelElement: JSX.Element;
 }
 
-const EditorContainer = styled.div`
-  height: 85vh;
+const EditorContainer = styled.div<{ height: number }>`
+  height: ${(props) => props.height}vh;
   display: flex;
 `;
 
@@ -26,7 +26,7 @@ const PanelContainer = styled.div`
   flex-direction: column;
 `;
 
-export const PanelSectionHeader = ({ text = "" }) => {
+export const PanelSectionHeader: FC<{ text: string }> = ({ text = "" }) => {
   return (
     <div className="d-flex">
       <hr className="me-2 w-100 flex-grow-1 text-white" />
@@ -52,8 +52,10 @@ export const PanelSection = ({
 };
 
 const Editor: FC<EditorProps> = ({ screenElement, panelElement }) => {
+  const height = useContext(EditorContext).editorContext.height;
+
   return (
-    <EditorContainer>
+    <EditorContainer height={height}>
       <ScreenContainer>{screenElement}</ScreenContainer>
       <PanelContainer>{panelElement}</PanelContainer>
     </EditorContainer>

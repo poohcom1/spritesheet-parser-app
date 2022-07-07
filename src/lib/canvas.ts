@@ -2,13 +2,16 @@ import { MouseEvent } from "react";
 
 export function withCanvas(
   canvas: HTMLCanvasElement | null,
-  callback: (context: CanvasRenderingContext2D) => void
+  callback: (context: CanvasRenderingContext2D) => void,
+  zoom = 1.0
 ): void {
   if (!canvas) return;
   const context = canvas.getContext("2d");
   if (!context) return;
 
+  context.scale(zoom, zoom);
   callback(context);
+  context.scale(1, 1);
 }
 
 export function mouse2canvas(e: MouseEvent, canvas: HTMLCanvasElement): Point {

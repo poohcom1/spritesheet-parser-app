@@ -1,5 +1,5 @@
 import { FC, useContext } from "react";
-import { Button, ButtonGroup } from "react-bootstrap";
+import { Button } from "react-bootstrap";
 import AccordionBody from "react-bootstrap/esm/AccordionBody";
 import AccordionHeader from "react-bootstrap/esm/AccordionHeader";
 import AccordionItem from "react-bootstrap/esm/AccordionItem";
@@ -32,12 +32,12 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
           {sheet.name}
         </p>
       </AccordionHeader>
-      <AccordionBody className="ms-4 text-white bg-dark h-25 p-0">
+      <AccordionBody className="text-white bg-dark h-25 p-0">
         {sheet.animations.length ? (
-          <ButtonGroup vertical className="rounded-0">
+          <>
             {sheet.animations.map((anim, i) => (
               <Button
-                className={`m-0 ${
+                className={`btn-block w-100 m-0 ${
                   selectedSheet === sheetInd &&
                   selectedAnimation === i &&
                   "text-decoration-underline"
@@ -50,9 +50,9 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
                 {anim.name}
               </Button>
             ))}
-          </ButtonGroup>
+          </>
         ) : (
-          <p className="m-auto text-white-50">No animations yet</p>
+          <p className="ms-3 mb-0 text-white-50">No animations yet</p>
         )}
       </AccordionBody>
     </AccordionItem>

@@ -13,6 +13,7 @@ interface Sprites {
 
 interface Sheet {
   image: ImageData;
+  rects: Rect[];
   name: string;
   animations: Sprites[];
 }

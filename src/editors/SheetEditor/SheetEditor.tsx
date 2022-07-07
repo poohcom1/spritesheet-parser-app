@@ -1,50 +1,18 @@
 import { FC, useCallback, useEffect, useState } from "react";
-import MSER, { MSEROptions, Rect } from "blob-detection-ts";
+import { Rect } from "blob-detection-ts";
 import Editor, { PanelSection } from "../Editor";
-import SelectionCanvas from "../../components/SelectionCanvas/SelectionCanvas";
-import { getBinaryImage } from "../../lib/image";
+import SelectionCanvas from "./SelectionCanvas";
 import { Button, ButtonGroup } from "react-bootstrap";
 import { mergeRects } from "../../lib/blob-detection";
 import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
 import useHistory from "../../hooks/useHistory";
 
-const DEFAULT_OPTIONS = {
-  delta: 0,
-  minArea: 0,
-  maxArea: 0.5,
-  maxVariation: 0.5,
-  minDiversity: 0.33,
-};
-
 interface SheetEditorProps {
-  image: ImageData | undefined;
+  sheet: Sheet | undefined;
   onAnimationCreated(rects: Rect[]): void;
 }
 
-function blobDetection(
-  image: ImageData | undefined,
-  options: MSEROptions = DEFAULT_OPTIONS
-): Rect[] {
-  if (!image) return [];
-
-  const imgData = new ImageData(
-    new Uint8ClampedArray(image.data),
-    image.width,
-    image.height
-  );
-  const binaryImgData = getBinaryImage(imgData);
-  const mser = new MSER(options);
-
-  let rects = mser.extract(binaryImgData).map((r) => r.rect);
-
-  rects = mser.mergeRects(rects);
-
-  return rects;
-}
-
-const SheetEditor: FC<SheetEditorProps> = ({ image, onAnimationCreated }) => {
-  const [MSEROptions, _setMSEROptions] = useState<MSEROptions>(DEFAULT_OPTIONS);
-
+const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
   const {
     current: rects,
     redo,
@@ -57,8 +25,8 @@ const SheetEditor: FC<SheetEditorProps> = ({ image, onAnimationCreated }) => {
   } = useHistory<Rect[]>([]);
 
   useEffect(() => {
-    setInitial(blobDetection(image, MSEROptions));
-  }, [MSEROptions, image, setInitial]);
+    if (sheet) setInitial(sheet.rects);
+  }, [setInitial, sheet]);
 
   const [selected, setSelected] = useState<Rect[]>([]);
 
@@ -81,13 +49,13 @@ const SheetEditor: FC<SheetEditorProps> = ({ image, onAnimationCreated }) => {
     setSelected([]);
   }, [onAnimationCreated, selected]);
 
-  if (image) {
+  if (sheet) {
     return (
       <Editor
         screenElement={
           <SelectionCanvas
             onSelect={setSelected}
-            image={image}
+            image={sheet.image}
             rects={rects}
             selectedRects={selected}
           />
