@@ -1,3 +1,21 @@
+export function openFile(): Promise<File> {
+  const input = document.createElement("input");
+  input.type = "file";
+
+  input.click();
+
+  return new Promise((res, rej) => {
+    input.addEventListener("change", (e) => {
+      const element = e.target as HTMLInputElement;
+      if (element && element.files?.length) {
+        res(element.files[0]);
+      } else {
+        rej();
+      }
+    });
+  });
+}
+
 export function getBinaryImage(
   image: ImageData,
   bgColor: RGB = [0, 0, 0],

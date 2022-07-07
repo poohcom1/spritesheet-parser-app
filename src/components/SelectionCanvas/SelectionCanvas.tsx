@@ -1,4 +1,3 @@
-import { Rect } from "blob-detection-ts";
 import {
   FC,
   MouseEventHandler,
@@ -7,7 +6,21 @@ import {
   useRef,
   useState,
 } from "react";
+import styled from "styled-components";
+import { Rect } from "blob-detection-ts";
 import { mouse2canvas, withCanvas } from "../../lib/canvas";
+
+const CanvasLayer = styled.canvas<{ zIndex: number }>`
+  position: absolute;
+  z-index: ${(props) => props.zIndex};
+`;
+
+const CanvasContainer = styled.div<{ width: number; height: number }>`
+  position: relative;
+  width: ${(props) => props.width}px;
+  height: ${(props) => props.height}px;
+  background-color: white;
+`;
 
 interface SelectionCanvasProps {
   image: ImageData;
@@ -81,7 +94,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({ image, rects }) => {
 
         for (const rect of rects) {
           const intersection = selection.intersect(rect);
-          if (intersection.width > 0 && intersection.height > 0) {
+          if (intersection) {
             intersects.push(rect);
           }
         }
@@ -99,32 +112,30 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({ image, rects }) => {
   }, []);
 
   return (
-    <>
-      <div className="relative">
-        <canvas
-          className="absolute z-0  border-2 border-stone-800"
-          ref={imageCanvasRef}
-          width={image.width}
-          height={image.height}
-        />
-        <canvas
-          className="absolute z-10"
-          ref={rectsCanvasRef}
-          width={image.width}
-          height={image.height}
-        />
-        <canvas
-          className="absolute z-20"
-          ref={selectionCanvasRef}
-          width={image.width}
-          height={image.height}
-          onMouseDown={onMouseDown}
-          onMouseUp={onMouseUp}
-          onMouseMove={onMouseMove}
-          onMouseLeave={onMouseUp}
-        />
-      </div>
-    </>
+    <CanvasContainer width={image.width} height={image.height}>
+      <CanvasLayer
+        zIndex={0}
+        ref={imageCanvasRef}
+        width={image.width}
+        height={image.height}
+      />
+      <CanvasLayer
+        zIndex={1}
+        ref={rectsCanvasRef}
+        width={image.width}
+        height={image.height}
+      />
+      <CanvasLayer
+        zIndex={2}
+        ref={selectionCanvasRef}
+        width={image.width}
+        height={image.height}
+        onMouseDown={onMouseDown}
+        onMouseUp={onMouseUp}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseUp}
+      />
+    </CanvasContainer>
   );
 };
 
