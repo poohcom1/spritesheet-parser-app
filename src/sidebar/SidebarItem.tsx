@@ -5,6 +5,7 @@ import AccordionHeader from "react-bootstrap/esm/AccordionHeader";
 import AccordionItem from "react-bootstrap/esm/AccordionItem";
 import { BsFillFileSpreadsheetFill as SheetIcon } from "react-icons/bs";
 import { MdOutlineAnimation as AnimIcon } from "react-icons/md";
+import ClearButton from "../components/ClearButton/ClearButton";
 import { SpritesContext } from "../context/SpritesContext";
 
 interface SidebarItemProps {
@@ -19,25 +20,28 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
 
   return (
     <AccordionItem className="p-0 bg-dark h-25" eventKey={`${sheetInd}`}>
-      <AccordionHeader
-        className="text-white bg-dark"
-        onClick={() =>
-          setSprite({
-            selectedSheet: sheetInd,
-            selectedAnimation: -1,
-          })
-        }
-      >
-        <SheetIcon className="me-1" />
-        <p
+      <AccordionHeader className="text-white bg-dark">
+        <ClearButton
+          style={{
+            color: "var(--primary)",
+            padding: "4px",
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSprite({
+              selectedSheet: sheetInd,
+              selectedAnimation: -1,
+            });
+          }}
           className={`m-0 ${
             selectedSheet === sheetInd &&
             selectedAnimation === -1 &&
             "text-decoration-underline"
           }`}
         >
+          <SheetIcon className="me-2" />
           {sheet.name}
-        </p>
+        </ClearButton>
       </AccordionHeader>
       <AccordionBody className="text-white bg-dark h-25 p-0">
         {sheet.animations.length ? (

@@ -13,6 +13,7 @@ import {
 import ClearButton from "./components/ClearButton/ClearButton";
 import { blobDetection } from "./lib/blob-detection";
 import { EditorContext } from "./context/EditorContext";
+import AnimationEditor from "./editors/AnimationEditor/AnimationEditor";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
@@ -95,11 +96,11 @@ function App() {
       <MainContainer>
         <HeaderBar variant="dark" bg="dark" expand="lg">
           <Container fluid>
-            <Navbar.Toggle aria-controls="navbar-dark-example" />
-            <Navbar.Collapse id="navbar-dark-example">
+            <Navbar.Toggle aria-controls="navbar-dark" />
+            <Navbar.Collapse id="navbar-dark">
               <Nav>
                 <NavDropdown
-                  id="nav-dropdown-dark-example"
+                  id="nav-dropdown-dark"
                   title="File"
                   menuVariant="dark"
                 >
@@ -138,10 +139,17 @@ function App() {
           </div>
         </ToolBar>
 
-        <SheetEditor
-          sheet={sprites.sheets[sprites.selectedSheet]}
-          onAnimationCreated={onAnimationCreated}
-        />
+        {sprites.selectedAnimation === -1 ? (
+          <SheetEditor
+            sheet={sprites.getSheet()}
+            onAnimationCreated={onAnimationCreated}
+          />
+        ) : (
+          <AnimationEditor
+            image={sprites.getSheet().image}
+            animation={sprites.getAnimation()}
+          />
+        )}
       </MainContainer>
     </AppContainer>
   );

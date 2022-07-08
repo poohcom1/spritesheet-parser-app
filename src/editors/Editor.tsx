@@ -15,6 +15,7 @@ const EditorContainer = styled.div<{ height: number }>`
 const ScreenContainer = styled.div`
   margin: 16px;
   border: 1px solid black;
+  height: fit-content;
   width: fit-content;
 `;
 
