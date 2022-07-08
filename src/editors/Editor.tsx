@@ -16,7 +16,6 @@ const ScreenContainer = styled.div`
   margin: 16px;
   border: 1px solid black;
   width: fit-content;
-  overflow-y: auto;
 `;
 
 const PanelContainer = styled.div`
