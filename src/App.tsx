@@ -14,10 +14,11 @@ import ClearButton from "./components/ClearButton/ClearButton";
 import { blobDetection } from "./lib/blob-detection";
 import { EditorContext } from "./context/EditorContext";
 import AnimationEditor from "./editors/AnimationEditor/AnimationEditor";
+import { useEffect } from "react";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
-export const EDITOR_SIZE = 100 - HEADER_SIZE - TOOLBAR_SIZE;
+const EDITOR_SIZE = 100 - HEADER_SIZE - TOOLBAR_SIZE;
 
 const AppContainer = styled.div`
   height: 100%;
@@ -51,6 +52,10 @@ function App() {
   } = useContext(SpritesContext);
 
   const { setValue: setEditorContext } = useContext(EditorContext);
+
+  useEffect(() => {
+    setEditorContext({ height: EDITOR_SIZE });
+  }, [setEditorContext]);
 
   const loadFile = useCallback(async () => {
     const file = await openFile();
@@ -114,42 +119,44 @@ function App() {
             </Navbar.Collapse>
           </Container>
         </HeaderBar>
-        <ToolBar>
-          <div className="d-flex">
-            <ClearButton
-              className="me-1"
-              onClick={() =>
-                setEditorContext((s) => ({
-                  zoom: s.zoom + 1,
-                }))
-              }
-            >
-              <ZoomInIcon />
-            </ClearButton>
-            <ClearButton
-              className="me-1"
-              onClick={() =>
-                setEditorContext((s) => ({
-                  zoom: s.zoom - 1,
-                }))
-              }
-            >
-              <ZoomOutIcon />
-            </ClearButton>
-          </div>
-        </ToolBar>
+        <div className="d-flex flex-column">
+          <ToolBar>
+            <div className="d-flex">
+              <ClearButton
+                className="me-1"
+                onClick={() =>
+                  setEditorContext((s) => ({
+                    zoom: s.zoom + 1,
+                  }))
+                }
+              >
+                <ZoomInIcon />
+              </ClearButton>
+              <ClearButton
+                className="me-1"
+                onClick={() =>
+                  setEditorContext((s) => ({
+                    zoom: s.zoom - 1,
+                  }))
+                }
+              >
+                <ZoomOutIcon />
+              </ClearButton>
+            </div>
+          </ToolBar>
 
-        {sprites.selectedAnimation === -1 ? (
-          <SheetEditor
-            sheet={sprites.getSheet()}
-            onAnimationCreated={onAnimationCreated}
-          />
-        ) : (
-          <AnimationEditor
-            image={sprites.getSheet().image}
-            animation={sprites.getAnimation()}
-          />
-        )}
+          {sprites.selectedAnimation === -1 ? (
+            <SheetEditor
+              sheet={sprites.getSheet()}
+              onAnimationCreated={onAnimationCreated}
+            />
+          ) : (
+            <AnimationEditor
+              image={sprites.getSheet().image}
+              animation={sprites.getAnimation()}
+            />
+          )}
+        </div>
       </MainContainer>
     </AppContainer>
   );
