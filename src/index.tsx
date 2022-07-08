@@ -6,15 +6,18 @@ import "./custom.scss";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { SpritesProvider } from "./context/SpritesContext";
+import { EditorProvider } from "./context/EditorContext";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 root.render(
   <React.StrictMode>
-    <SpritesProvider>
-      <App />
-    </SpritesProvider>
+    <EditorProvider>
+      <SpritesProvider>
+        <App />
+      </SpritesProvider>
+    </EditorProvider>
   </React.StrictMode>
 );
 

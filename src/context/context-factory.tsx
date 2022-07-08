@@ -1,8 +1,17 @@
-import { FC, createContext, ReactNode, useState, useCallback } from "react";
+import {
+  FC,
+  createContext,
+  ReactNode,
+  useState,
+  useCallback,
+  Dispatch,
+} from "react";
+
+type SetPartialStateAction<S> = Partial<S> | ((prevState: S) => Partial<S>);
 
 interface ContextType<T> {
   value: T;
-  setValue(newState: Partial<T>): void;
+  setValue: Dispatch<SetPartialStateAction<T>>;
   dispatch<K extends keyof T>(key: K, value: T[K]): void;
 }
 
@@ -16,10 +25,22 @@ export default function generateContext<T>(initialState: T) {
   const Provider: FC<{ children?: ReactNode }> = ({ children }) => {
     const [state, setState] = useState<T>(initialState);
 
-    const setParialState = useCallback(
-      (newState: Partial<T>) => {
-        setState({ ...state, ...newState });
-        return { ...state, ...newState };
+    const setPartialState = useCallback(
+      (action: SetPartialStateAction<T>) => {
+        if (typeof action === "function") {
+          const newState = (action as (s: T) => T)(state);
+          const updatedState = { ...state, ...newState };
+
+          setState(updatedState);
+
+          return updatedState;
+        } else {
+          const updatedState = { ...state, ...action };
+
+          setState(updatedState);
+
+          return updatedState;
+        }
       },
       [state]
     );
@@ -32,7 +53,7 @@ export default function generateContext<T>(initialState: T) {
       <Context.Provider
         value={{
           value: state,
-          setValue: setParialState,
+          setValue: setPartialState,
           dispatch,
         }}
       >

@@ -12,7 +12,7 @@ import MSER, { Rect } from "blob-detection-ts";
 import { mouse2transformCanvas, withCanvas } from "../../lib/canvas";
 import EditorCanvas from "../../components/EditorCanvas/EditorCanvas";
 import { useContext } from "react";
-import EditorContext from "../../context/EditorContext";
+import { EditorContext } from "../../context/EditorContext";
 import { TransformCanvasRenderingContext2D } from "canvas-transform";
 
 const CanvasLayer = styled(EditorCanvas)<{ z: number }>`
@@ -50,7 +50,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   onSelect,
 }) => {
   // Editor context
-  const editorContext = useContext(EditorContext).editorContext;
+  const editorContext = useContext(EditorContext).value;
 
   const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);

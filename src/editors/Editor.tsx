@@ -1,6 +1,6 @@
 import { FC, ReactNode, useContext } from "react";
 import styled from "styled-components";
-import EditorContext from "../context/EditorContext";
+import { EditorContext } from "../context/EditorContext";
 
 interface EditorProps {
   screenElement: JSX.Element;
@@ -51,7 +51,7 @@ export const PanelSection = ({
 };
 
 const Editor: FC<EditorProps> = ({ screenElement, panelElement }) => {
-  const height = useContext(EditorContext).editorContext.height;
+  const height = useContext(EditorContext).value.height;
 
   return (
     <EditorContainer height={height}>

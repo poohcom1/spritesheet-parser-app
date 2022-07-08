@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import React, { useCallback, useContext } from "react";
 import { getImageData, openFile } from "./lib/image";
 import styled from "styled-components";
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
@@ -6,13 +6,13 @@ import SheetEditor from "./editors/SheetEditor/SheetEditor";
 import Sidebar from "./sidebar/Sidebar";
 import { Rect } from "blob-detection-ts";
 import { SpritesContext } from "./context/SpritesContext";
-import EditorContext, { EditorContextType } from "./context/EditorContext";
 import {
   AiOutlineZoomIn as ZoomInIcon,
   AiOutlineZoomOut as ZoomOutIcon,
 } from "react-icons/ai";
 import ClearButton from "./components/ClearButton/ClearButton";
 import { blobDetection } from "./lib/blob-detection";
+import { EditorContext } from "./context/EditorContext";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
@@ -49,10 +49,7 @@ function App() {
     setValue: setSprites,
   } = useContext(SpritesContext);
 
-  const [editorContext, setEditorContext] = useState<EditorContextType>({
-    zoom: 1.0,
-    height: EDITOR_SIZE,
-  });
+  const { setValue: setEditorContext } = useContext(EditorContext);
 
   const loadFile = useCallback(async () => {
     const file = await openFile();
@@ -94,67 +91,58 @@ function App() {
 
   return (
     <AppContainer className="d-flex h-100">
-      <EditorContext.Provider
-        value={{
-          editorContext,
-          setEditorContext,
-        }}
-      >
-        <Sidebar sheets={sprites.sheets} />
-        <MainContainer>
-          <HeaderBar variant="dark" bg="dark" expand="lg">
-            <Container fluid>
-              <Navbar.Toggle aria-controls="navbar-dark-example" />
-              <Navbar.Collapse id="navbar-dark-example">
-                <Nav>
-                  <NavDropdown
-                    id="nav-dropdown-dark-example"
-                    title="File"
-                    menuVariant="dark"
-                  >
-                    <NavDropdown.Item onClick={loadFile}>
-                      Load image...
-                    </NavDropdown.Item>
-                    <NavDropdown.Divider />
-                    <NavDropdown.Item>Export</NavDropdown.Item>
-                  </NavDropdown>
-                </Nav>
-              </Navbar.Collapse>
-            </Container>
-          </HeaderBar>
-          <ToolBar>
-            <div className="d-flex">
-              <ClearButton
-                className="me-1"
-                onClick={() =>
-                  setEditorContext({
-                    ...editorContext,
-                    zoom: editorContext.zoom + 0.5,
-                  })
-                }
-              >
-                <ZoomInIcon />
-              </ClearButton>
-              <ClearButton
-                className="me-1"
-                onClick={() =>
-                  setEditorContext({
-                    ...editorContext,
-                    zoom: editorContext.zoom - 0.5,
-                  })
-                }
-              >
-                <ZoomOutIcon />
-              </ClearButton>
-            </div>
-          </ToolBar>
+      <Sidebar sheets={sprites.sheets} />
+      <MainContainer>
+        <HeaderBar variant="dark" bg="dark" expand="lg">
+          <Container fluid>
+            <Navbar.Toggle aria-controls="navbar-dark-example" />
+            <Navbar.Collapse id="navbar-dark-example">
+              <Nav>
+                <NavDropdown
+                  id="nav-dropdown-dark-example"
+                  title="File"
+                  menuVariant="dark"
+                >
+                  <NavDropdown.Item onClick={loadFile}>
+                    Load image...
+                  </NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item>Export</NavDropdown.Item>
+                </NavDropdown>
+              </Nav>
+            </Navbar.Collapse>
+          </Container>
+        </HeaderBar>
+        <ToolBar>
+          <div className="d-flex">
+            <ClearButton
+              className="me-1"
+              onClick={() =>
+                setEditorContext((s) => ({
+                  zoom: s.zoom + 1,
+                }))
+              }
+            >
+              <ZoomInIcon />
+            </ClearButton>
+            <ClearButton
+              className="me-1"
+              onClick={() =>
+                setEditorContext((s) => ({
+                  zoom: s.zoom - 1,
+                }))
+              }
+            >
+              <ZoomOutIcon />
+            </ClearButton>
+          </div>
+        </ToolBar>
 
-          <SheetEditor
-            sheet={sprites.sheets[sprites.selectedSheet]}
-            onAnimationCreated={onAnimationCreated}
-          />
-        </MainContainer>
-      </EditorContext.Provider>
+        <SheetEditor
+          sheet={sprites.sheets[sprites.selectedSheet]}
+          onAnimationCreated={onAnimationCreated}
+        />
+      </MainContainer>
     </AppContainer>
   );
 }

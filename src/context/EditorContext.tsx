@@ -1,21 +1,8 @@
-import { createContext, SetStateAction, Dispatch } from "react";
+import generateContext from "./context-factory";
 
-export interface EditorContextType {
-  zoom: number;
-  height: number;
-}
-
-interface EditorStateType {
-  editorContext: EditorContextType;
-  setEditorContext: Dispatch<SetStateAction<EditorContextType>>;
-}
-
-const EditorContext = createContext<EditorStateType>({
-  editorContext: {
-    zoom: 1.0,
-    height: 0,
-  },
-  setEditorContext: () => undefined,
+const { Context, Provider } = generateContext({
+  zoom: 0,
+  height: 0,
 });
 
-export default EditorContext;
+export { Context as EditorContext, Provider as EditorProvider };
