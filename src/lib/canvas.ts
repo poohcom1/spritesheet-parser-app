@@ -1,19 +1,5 @@
-import {
-  TransformCanvasRenderingContext2D,
-  withTransformedContext,
-} from "canvas-transform";
+import { TransformCanvasRenderingContext2D } from "canvas-transform-context";
 import { MouseEvent } from "react";
-
-export function withCanvas(
-  canvas: HTMLCanvasElement | null,
-  callback: (context: TransformCanvasRenderingContext2D) => void
-) {
-  if (!canvas) return;
-  const context = canvas.getContext("2d");
-  if (!context) return;
-
-  return withTransformedContext(context, callback);
-}
 
 export function mouse2transformCanvas(
   e: MouseEvent,
