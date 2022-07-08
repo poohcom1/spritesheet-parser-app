@@ -44,7 +44,7 @@ const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
     push(newRects);
   }, [push, rects, selected]);
 
-  const animationedCreated = useCallback(() => {
+  const animationCreated = useCallback(() => {
     onAnimationCreated(selected);
     setSelected([]);
   }, [onAnimationCreated, selected]);
@@ -63,8 +63,23 @@ const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
         panelElement={
           <>
             <h4>Sheet Inspector</h4>
+            <PanelSection header="Animation">
+              <Button
+                variant="secondary"
+                className="w-100"
+                title={
+                  selected.length === 0
+                    ? "Please selected one or more sprites to create an animation"
+                    : "Create an animation with selected sprites"
+                }
+                disabled={selected.length === 0}
+                onClick={animationCreated}
+              >
+                Create Animation
+              </Button>
+            </PanelSection>
             <PanelSection header={"Selection"}>
-              <p>Selected blobs: {selected.length}</p>
+              <p>Selected sprites: {selected.length}</p>
               <ButtonGroup>
                 <Button
                   variant="secondary"
@@ -77,7 +92,10 @@ const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
                   title="Undo"
                   variant="dark"
                   disabled={!canUndo}
-                  onClick={() => undo()}
+                  onClick={() => {
+                    undo();
+                    setSelected([]);
+                  }}
                 >
                   <UndoIcon />
                 </Button>
@@ -85,29 +103,23 @@ const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
                   title="Redo"
                   variant="dark"
                   disabled={!canRedo}
-                  onClick={() => redo()}
+                  onClick={() => {
+                    redo();
+                    setSelected([]);
+                  }}
                 >
                   <RedoIcon />
                 </Button>
-                <Button variant="dark" onClick={() => reset()}>
+                <Button
+                  variant="dark"
+                  onClick={() => {
+                    reset();
+                    setSelected([]);
+                  }}
+                >
                   Reset
                 </Button>
               </ButtonGroup>
-            </PanelSection>
-            <PanelSection header="Animation">
-              <Button
-                variant="secondary"
-                className="w-100"
-                title={
-                  selected.length === 0
-                    ? "Please selected one or more sprites to create an animation"
-                    : "Create an animation with selected sprites"
-                }
-                disabled={selected.length === 0}
-                onClick={animationedCreated}
-              >
-                Create Animation
-              </Button>
             </PanelSection>
           </>
         }

@@ -41,10 +41,34 @@ export function mergeRects(rects: Rect[]): Rect {
   return rect;
 }
 
-/**
- * TODO
- * @param rects
- */
-export function sortRects(rects: Rect[]): void {
-  rects.sort();
+function rectOverlapsInDirection(rect1: Rect, rect2: Rect): boolean {
+  return rect1.y <= rect2.y + rect2.height && rect1.y + rect1.height >= rect2.y;
+}
+
+function compareRect(blob1: Rect, blob2: Rect): number {
+  if (rectOverlapsInDirection(blob1, blob2)) {
+    return blob1.x - blob2.x;
+  } else {
+    return blob1.y - blob2.y;
+  }
+}
+
+export function orderRects(blobList: Rect[]): void {
+  blobList.sort(compareRect);
+
+  const previousBlob = blobList[0] as Rect & { row: number; col: number };
+  previousBlob.row = 0;
+  previousBlob.col = 0;
+
+  for (let i = 1; i < blobList.length; i++) {
+    const currentBlob = blobList[i] as Rect & { row: number; col: number };
+
+    if (rectOverlapsInDirection(currentBlob, previousBlob)) {
+      currentBlob.col = previousBlob.col + 1;
+      currentBlob.row = previousBlob.row;
+    } else {
+      currentBlob.col = 0;
+      currentBlob.row = previousBlob.row + 1;
+    }
+  }
 }

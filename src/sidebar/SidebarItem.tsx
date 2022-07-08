@@ -68,7 +68,7 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
             ))}
           </>
         ) : (
-          <p className="ms-3 mb-0 text-white-50">No animations yet</p>
+          <p className="m-0 me-3 text-white-50 text-end">No animations yet</p>
         )}
       </AccordionBody>
     </AccordionItem>

@@ -11,7 +11,7 @@ import {
   AiOutlineZoomOut as ZoomOutIcon,
 } from "react-icons/ai";
 import ClearButton from "./components/ClearButton/ClearButton";
-import { blobDetection } from "./lib/blob-detection";
+import { blobDetection, orderRects } from "./lib/blob-detection";
 import { EditorContext } from "./context/EditorContext";
 import AnimationEditor from "./editors/AnimationEditor/AnimationEditor";
 import { useEffect } from "react";
@@ -55,7 +55,8 @@ function App() {
 
   useEffect(() => {
     setEditorContext({ height: EDITOR_SIZE });
-  }, [setEditorContext]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadFile = useCallback(async () => {
     const file = await openFile();
@@ -83,6 +84,8 @@ function App() {
 
   const onAnimationCreated = useCallback(
     (rects: Rect[]) => {
+      orderRects(rects);
+
       sprites.sheets[sprites.selectedSheet].animations.push({
         name:
           "Animation #" +
@@ -122,6 +125,12 @@ function App() {
         <div className="d-flex flex-column">
           <ToolBar>
             <div className="d-flex">
+              <div
+                className="d-flex overflow-hidden  rounded align-items-center text-white-50 p-2"
+                style={{ width: "150px", border: "1px solid grey" }}
+              >
+                {sprites.getAnimation()?.name ?? sprites.getSheet()?.name ?? ""}
+              </div>
               <ClearButton
                 className="me-1"
                 onClick={() =>

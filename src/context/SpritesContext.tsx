@@ -9,7 +9,7 @@ const { Context, Provider } = generateContext({
     return this.sheets[this.selectedSheet];
   },
   getAnimation() {
-    return this.sheets[this.selectedSheet].animations[this.selectedAnimation];
+    return this.sheets[this.selectedSheet]?.animations[this.selectedAnimation];
   },
 });
 
