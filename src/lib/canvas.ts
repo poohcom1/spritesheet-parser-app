@@ -6,7 +6,7 @@ import { MouseEvent } from "react";
 
 export function withCanvas(
   canvas: HTMLCanvasElement | null,
-  callback: (context: CanvasRenderingContext2D) => void
+  callback: (context: TransformCanvasRenderingContext2D) => void
 ) {
   if (!canvas) return;
   const context = canvas.getContext("2d");

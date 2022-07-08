@@ -10,12 +10,11 @@ import {
 import styled from "styled-components";
 import MSER, { Rect } from "blob-detection-ts";
 import { mouse2transformCanvas, withCanvas } from "../../lib/canvas";
-import EditorCanvas from "../../components/EditorCanvas/EditorCanvas";
 import { useContext } from "react";
 import { EditorContext } from "../../context/EditorContext";
 import { TransformCanvasRenderingContext2D } from "canvas-transform";
 
-const CanvasLayer = styled(EditorCanvas)<{ z: number }>`
+const CanvasLayer = styled.canvas<{ z: number }>`
   position: absolute;
   z-index: ${(props) => props.z};
 `;
@@ -24,6 +23,7 @@ const CanvasContainer = styled.div<{ width: number; height: number }>`
   position: relative;
   width: ${(props) => props.width}px;
   height: ${(props) => props.height}px;
+  background-color: white;
 `;
 
 interface SelectionCanvasProps {
@@ -50,7 +50,8 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   onSelect,
 }) => {
   // Editor context
-  const editorContext = useContext(EditorContext).value;
+  const editorContext = useContext(EditorContext);
+  const setEditorValue = editorContext.setValue;
 
   const bgCanvasRef = useRef<HTMLCanvasElement>(null);
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -90,34 +91,43 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     canvas.height = image.height;
     canvas.getContext("2d")?.putImageData(rectImage, 0, 0);
 
-    imageCtxRef.current = withCanvas(imageCanvasRef.current, (context) => {
-      context.drawImage(canvas, 0, 0);
+    imageCtxRef.current = withCanvas(imageCanvasRef.current, (ctx) => {
+      ctx.clearCanvas();
+      ctx.drawImage(canvas, 0, 0);
     });
   }, [image, rects]);
 
   // Rects canvas
   useEffect(() => {
-    rectsCtxRef.current = withCanvas(rectsCanvasRef.current, (context) => {
-      context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    rectsCtxRef.current = withCanvas(rectsCanvasRef.current, (ctx) => {
+      ctx.clearCanvas();
       selectedRects.forEach((rect) => {
-        context.fillStyle = "#ff000055";
-        context.fillRect(rect.x, rect.y, rect.width, rect.height);
+        ctx.fillStyle = "#ff000055";
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
       });
     });
   }, [selectedRects]);
 
+  const preSelection = useRef(new Rect());
+
   // Selection canvas
   useEffect(() => {
-    selectCtxRef.current = withCanvas(selectCanvasRef.current, (context) => {
-      context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-      context.fillStyle = "#ff0000aa";
+    selectCtxRef.current = withCanvas(selectCanvasRef.current, (ctx) => {
+      ctx.clearRect(
+        preSelection.current.x - 5,
+        preSelection.current.y - 5,
+        preSelection.current.width + 10,
+        preSelection.current.height + 10
+      );
+      ctx.fillStyle = "#ff0000aa";
       if (selection.width > 0 && selection.height > 0) {
-        context.fillRect(
+        ctx.fillRect(
           selection.x,
           selection.y,
           selection.width,
           selection.height
         );
+        preSelection.current = selection;
       }
     });
   }, [selection]);
@@ -182,48 +192,44 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     [contexts]
   );
 
+  const zoomRef = useRef(editorContext.value.zoom);
+
   const onWheel: WheelEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
       }
 
-      let zoom = 0;
-
-      withContexts(contexts(), (ctx) => {
-        zoom = ctx.zoom(-Math.sign(e.deltaY), 1.1);
+      setEditorValue({
+        zoom: editorContext.value.zoom - Math.sign(e.deltaY),
       });
-
-      console.log(zoom);
     },
-    [contexts]
+    [setEditorValue, editorContext.value.zoom]
   );
+
+  useEffect(() => {
+    if (editorContext.value.zoom !== zoomRef.current) {
+      const diff = editorContext.value.zoom - zoomRef.current;
+      zoomRef.current = editorContext.value.zoom;
+      withContexts(contexts(), (ctx) => ctx.zoom(diff));
+    }
+  }, [contexts, editorContext.value.zoom]);
 
   return (
     <CanvasContainer width={image.width} height={image.height}>
       <CanvasLayer
-        zoom={1}
-        z={0}
-        ref={bgCanvasRef}
-        width={image.width}
-        height={image.height}
-      />
-      <CanvasLayer
-        zoom={editorContext.zoom}
         z={1}
         ref={imageCanvasRef}
         width={image.width}
         height={image.height}
       />
       <CanvasLayer
-        zoom={editorContext.zoom}
         z={2}
         ref={rectsCanvasRef}
         width={image.width}
         height={image.height}
       />
       <CanvasLayer
-        zoom={editorContext.zoom}
         z={3}
         ref={selectCanvasRef}
         width={image.width}
