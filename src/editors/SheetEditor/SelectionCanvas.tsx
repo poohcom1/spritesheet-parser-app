@@ -16,9 +16,8 @@ import {
   TransformCanvasRenderingContext2D,
   toTransformedContext,
 } from "canvas-transform-context";
-import FitCanvas from "../../components/FitCanvas/FitCanvas";
 
-const CanvasLayer = styled(FitCanvas)<{ z: number }>`
+const CanvasLayer = styled.canvas<{ z: number }>`
   position: absolute;
   z-index: ${(props) => props.z};
 `;
@@ -237,13 +236,23 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     }
   }, [contexts, draw, zoom]);
 
+  const [canvasSize, setCanvasSize] = useState({ width: 1920, height: 1080 });
+
+  useEffect(() => {
+    setCanvasSize({
+      width: window.screen.width ?? window.innerWidth,
+      height: window.screen.height ?? window.innerHeight,
+    });
+  }, []);
+
   return (
     <CanvasContainer>
-      <CanvasLayer z={1} ref={imageCanvasRef} />
-      <CanvasLayer z={2} ref={rectsCanvasRef} />
+      <CanvasLayer z={1} ref={imageCanvasRef} {...canvasSize} />
+      <CanvasLayer z={2} ref={rectsCanvasRef} {...canvasSize} />
       <CanvasLayer
         z={3}
         ref={selectCanvasRef}
+        {...canvasSize}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
         onMouseMove={onMouseMove}

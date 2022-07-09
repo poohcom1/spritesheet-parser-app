@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { getImageData, openFile } from "./lib/image";
 import styled from "styled-components";
-import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
+import { Nav, Navbar, NavDropdown } from "react-bootstrap";
 import SheetEditor from "./editors/SheetEditor/SheetEditor";
 import Sidebar from "./sidebar/Sidebar";
 import {
@@ -95,25 +95,23 @@ function App() {
     <AppContainer className="d-flex h-100">
       <Sidebar />
       <MainContainer>
-        <HeaderBar variant="dark" bg="dark" expand="lg">
-          <Container fluid>
-            <Navbar.Toggle aria-controls="navbar-dark" />
-            <Navbar.Collapse id="navbar-dark">
-              <Nav>
-                <NavDropdown
-                  id="nav-dropdown-dark"
-                  title="File"
-                  menuVariant="dark"
-                >
-                  <NavDropdown.Item onClick={loadFile}>
-                    Load image...
-                  </NavDropdown.Item>
-                  <NavDropdown.Divider />
-                  <NavDropdown.Item>Export</NavDropdown.Item>
-                </NavDropdown>
-              </Nav>
-            </Navbar.Collapse>
-          </Container>
+        <HeaderBar variant="dark" bg="dark" expand>
+          <Navbar.Toggle aria-controls="navbar-dark" />
+          <Navbar.Collapse id="navbar-dark">
+            <Nav>
+              <NavDropdown
+                id="nav-dropdown-dark"
+                title="File"
+                menuVariant="dark"
+              >
+                <NavDropdown.Item onClick={loadFile}>
+                  Load image...
+                </NavDropdown.Item>
+                <NavDropdown.Divider />
+                <NavDropdown.Item>Export</NavDropdown.Item>
+              </NavDropdown>
+            </Nav>
+          </Navbar.Collapse>
         </HeaderBar>
         <div className="d-flex flex-column">
           <ToolBar>
