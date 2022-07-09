@@ -170,8 +170,6 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
-      withContexts(contexts(), (ctx) => ctx.pan(e.nativeEvent));
-
       if (!(e.ctrlKey || e.metaKey)) {
         if (selectCtxRef.current && anchorRef.current) {
           const begin = anchorRef.current;
@@ -196,6 +194,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
           onSelect(intersects);
         }
       } else {
+        withContexts(contexts(), (ctx) => ctx.pan(e.nativeEvent));
         drawImage();
         drawRects();
       }
@@ -218,10 +217,6 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
 
   const onWheel: WheelEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-      }
-
       setZoom(zoom - Math.sign(e.deltaY));
     },
     [setZoom, zoom]
@@ -256,11 +251,21 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
         onMouseMove={onMouseMove}
-        onMouseLeave={onMouseUp}
+        onMouseEnter={() =>
+          document.addEventListener("wheel", preventZoom, {
+            passive: false,
+          })
+        }
+        onMouseLeave={(e) => {
+          document.removeEventListener("wheel", preventZoom);
+          onMouseUp(e);
+        }}
         onWheel={onWheel}
       />
     </CanvasContainer>
   );
 };
+
+const preventZoom = (e: WheelEvent) => e.ctrlKey && e.preventDefault();
 
 export default SelectionCanvas;
