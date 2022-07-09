@@ -9,11 +9,12 @@ import {
   AiOutlineZoomOut as ZoomOutIcon,
 } from "react-icons/ai";
 import ClearButton from "./components/ClearButton/ClearButton";
-import { blobDetection } from "./lib/blob-detection";
 import AnimationEditor from "./editors/AnimationEditor/AnimationEditor";
 import { useEffect } from "react";
 import useDisplayStore from "./stores/displayStore";
 import useRootStore from "./stores/rootStore";
+import { wrap } from "comlink";
+import { Rect } from "blob-detection-ts";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
@@ -43,8 +44,18 @@ const ToolBar = styled.div`
   display: flex;
 `;
 
+const worker = new Worker(
+  new URL("./workers/blob-detection-worker.ts", import.meta.url),
+  {
+    name: "blob-detection",
+    type: "module",
+  }
+);
+
+const { blobDetection } =
+  wrap<import("./workers/blob-detection-worker").BlobDetectionWorker>(worker);
+
 function App() {
-  const sheets = useRootStore((s) => s.sheets);
   const addSheet = useRootStore((s) => s.addSheet);
   const currentSheet = useRootStore((s) => s.getSheet());
   const currentAnim = useRootStore((s) => s.getAnimation());
@@ -64,8 +75,12 @@ function App() {
 
     if (!file) return;
 
+    setLoading(true);
     const image = await getImageData(file);
-    const rects = blobDetection(image);
+    const rects = (await blobDetection(image)).map(
+      (raw) =>
+        new Rect(raw.left, raw.top, raw.right - raw.left, raw.bottom - raw.top)
+    );
 
     addSheet({
       image,
@@ -73,6 +88,7 @@ function App() {
       name: file.name,
       animations: [],
     });
+    setLoading(false);
   }, [addSheet]);
 
   return (
@@ -106,7 +122,9 @@ function App() {
                 className="d-flex overflow-hidden  rounded align-items-center text-white-50 p-2"
                 style={{ width: "150px", border: "1px solid grey" }}
               >
-                {currentAnim?.name ?? currentSheet?.name ?? ""}
+                {currentAnim?.name ??
+                  currentSheet?.name ??
+                  (loading ? "Loading..." : "")}
               </div>
               <ClearButton className="me-1" onClick={zoomIn}>
                 <ZoomInIcon />
@@ -118,7 +136,7 @@ function App() {
           </ToolBar>
 
           {!currentAnim ? (
-            <SheetEditor loading={loading} sheet={currentSheet} />
+            <SheetEditor />
           ) : (
             <AnimationEditor
               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

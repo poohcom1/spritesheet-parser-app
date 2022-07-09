@@ -3,19 +3,14 @@ import { Rect } from "blob-detection-ts";
 import Editor, { PanelSection } from "../Editor";
 import SelectionCanvas from "./SelectionCanvas";
 import { Button, ButtonGroup } from "react-bootstrap";
-import { mergeRects } from "../../lib/blob-detection";
+import { mergeRects, orderRects } from "../../lib/blob-detection";
 import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
 import useHistory from "../../hooks/useHistory";
 import useChangeDetector from "../../hooks/useChangeDetector";
 import useRootStore from "../../stores/rootStore";
 
-interface SheetEditorProps {
-  loading: boolean;
-
-  sheet: Sheet | undefined;
-}
-
-const SheetEditor: FC<SheetEditorProps> = ({ sheet, loading }) => {
+const SheetEditor: FC = () => {
+  const sheet = useRootStore((s) => s.getSheet());
   const addAnimation = useRootStore((s) => s.addAnimation);
 
   const {
@@ -54,24 +49,21 @@ const SheetEditor: FC<SheetEditorProps> = ({ sheet, loading }) => {
   }, [push, rects, selected]);
 
   const animationCreated = useCallback(() => {
-    addAnimation(rects);
+    orderRects(selected);
+    addAnimation(selected);
     setSelected([]);
-  }, [addAnimation, rects]);
+  }, [addAnimation, selected]);
 
   if (sheet) {
     return (
       <Editor
         screenElement={
-          loading ? (
-            <>Loading...</>
-          ) : (
-            <SelectionCanvas
-              onSelect={setSelected}
-              image={sheet.image}
-              rects={rects}
-              selectedRects={selected}
-            />
-          )
+          <SelectionCanvas
+            onSelect={setSelected}
+            image={sheet.image}
+            rects={rects}
+            selectedRects={selected}
+          />
         }
         panelElement={
           <>
