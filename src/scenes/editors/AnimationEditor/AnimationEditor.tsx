@@ -1,5 +1,5 @@
 import { getFramesSize } from "lib/blob-detection";
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, ButtonGroup, FormControl, FormLabel } from "react-bootstrap";
 import {
   AiFillPauseCircle,
@@ -12,15 +12,11 @@ import {
 import useDisplayStore from "stores/displayStore";
 import useRootStore from "stores/rootStore";
 import Editor, { PanelContainer, PanelSection } from "../Editor";
+import DPad from "./DPad";
 
 const AnimationEditor: FC = () => {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const image = useRootStore((s) => s.getSheet()?.image)!;
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const image = useRootStore((s) => s.getSheet()?.image);
   const animation = useRootStore((s) => s.getAnimation())!;
-
-  // Data
-  const padding = animation.padding;
 
   // Display
   const onZoom = useDisplayStore((s) => s.onZoom);
@@ -43,12 +39,23 @@ const AnimationEditor: FC = () => {
   const [size, setSize] = useState({ width: 0, height: 0 });
 
   const [playing, setPlaying] = useState(true);
-
   const [i, setI] = useState(0);
 
-  const intervalRef = useRef<NodeJS.Timer | undefined>();
+  // Init
+  useEffect(() => setSize(getFramesSize(animation.frames)), [animation.frames]);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageCanvas = useMemo(() => {
+    if (image) {
+      const imgCanvas = document.createElement("canvas");
+      imgCanvas.width = image.width;
+      imgCanvas.height = image.height;
+      imgCanvas.getContext("2d")?.putImageData(image, 0, 0);
+      return imgCanvas;
+    } else return undefined;
+  }, [image]);
+
+  // Animation
+  const intervalRef = useRef<NodeJS.Timer | undefined>();
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
@@ -61,33 +68,41 @@ const AnimationEditor: FC = () => {
     }
   }, [animation.frames.length, fps, i, playing]);
 
-  useEffect(() => {
-    const ctx = canvasRef.current?.getContext("2d");
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const frame = animation.frames[i] ?? animation.frames[0];
 
-    if (!ctx) return;
+  const setOffset = useRootStore(
+    useCallback(
+      (s) => (x: number, y: number) => {
+        const frame = animation.frames[i];
+        frame.offset.left = x;
+        frame.offset.top = y;
 
-    const imgCanvas = document.createElement("canvas");
-    imgCanvas.width = image.width;
-    imgCanvas.height = image.height;
-    imgCanvas.getContext("2d")?.putImageData(image, 0, 0);
+        s.editAnimation(animation);
+      },
+      [animation, i]
+    )
+  );
 
-    setSize(getFramesSize(animation.frames));
+  const ctx = canvasRef.current?.getContext("2d");
 
-    const frame = animation.frames[i];
+  if (ctx && imageCanvas) {
+    ctx.canvas.width = size.width + animation.padding.x * 2;
+    ctx.canvas.height = size.height + animation.padding.y * 2;
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     ctx.drawImage(
-      imgCanvas,
+      imageCanvas,
       frame.position.x,
       frame.position.y,
       frame.position.width,
       frame.position.height,
-      frame.offset.left + padding.x,
-      frame.offset.top + padding.y,
+      frame.offset.left + animation.padding.x,
+      frame.offset.top + animation.padding.y,
       frame.position.width,
       frame.position.height
     );
-  }, [animation.frames, i, image, padding.x, padding.y]);
+  }
 
   return (
     <>
@@ -103,9 +118,8 @@ const AnimationEditor: FC = () => {
                 transform: `scale(${Math.pow(1.1, zoom * 2)})`,
                 flexGrow: "0",
                 flexShrink: "0",
+                border: "1px solid black",
               }}
-              width={size.width + padding.x * 2}
-              height={size.height + padding.y * 2}
               ref={canvasRef}
             />
           </div>
@@ -169,7 +183,17 @@ const AnimationEditor: FC = () => {
               </ButtonGroup>
               <p>Frame: {i}</p>
             </PanelSection>
-            <PanelSection header="Positioning"></PanelSection>
+            <PanelSection header="Positioning">
+              <p>
+                Offsets: ({frame.offset.x}, {frame.offset.y})
+              </p>
+              <DPad
+                onLeft={() => setOffset(frame.offset.x - 1, frame.offset.y)}
+                onUp={() => setOffset(frame.offset.x, frame.offset.y - 1)}
+                onRight={() => setOffset(frame.offset.x + 1, frame.offset.y)}
+                onDown={() => setOffset(frame.offset.x, frame.offset.y + 1)}
+              />
+            </PanelSection>
           </PanelContainer>
         }
       />

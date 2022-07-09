@@ -49,7 +49,7 @@ const rootStore = combine(rootState, (set, get) => ({
     sheet.animations.push({
       name: name || "Animation #" + sheet.animations.length,
       frames,
-      padding: { x: 0, y: 0 },
+      padding: { x: 5, y: 5 },
 
       display: {
         zoom: 0,

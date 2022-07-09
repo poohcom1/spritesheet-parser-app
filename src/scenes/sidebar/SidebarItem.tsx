@@ -34,6 +34,10 @@ const ClearButton = styled.a`
   }
 `;
 
+const CustomAccordianHeader = styled(AccordionHeader)`
+  background-color: black;
+`;
+
 interface SidebarItemProps {
   sheetInd: number;
   sheet: Sheet;
@@ -46,9 +50,12 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
   const selectedSheet = useRootStore((s) => s.selectedSheet);
   const selectedAnimation = useRootStore((s) => s.selectedAnimation);
 
+  const isSelectedAnim = (anim: number) =>
+    selectedSheet === sheetInd && anim === selectedAnimation;
+
   return (
     <AccordionItem className="p-0 bg-dark h-25" eventKey={`${sheetInd}`}>
-      <AccordionHeader className="text-white bg-dark">
+      <CustomAccordianHeader bsPrefix="">
         <ClearButton
           style={{
             color: "var(--primary)",
@@ -67,19 +74,15 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
           <SheetIcon className="me-2" />
           {sheet.name}
         </ClearButton>
-      </AccordionHeader>
+      </CustomAccordianHeader>
       <AccordionBody className="text-white bg-dark h-25 p-0">
         {sheet.animations.length ? (
           <>
             {sheet.animations.map((anim, i) => (
               <Button
-                className={`btn-block w-100 m-0 ${
-                  selectedSheet === sheetInd &&
-                  selectedAnimation === i &&
-                  "text-decoration-underline"
-                }`}
+                className={`btn-block w-100 m-0 ${isSelectedAnim(i)}`}
                 onClick={() => selectAnim(sheetInd, i)}
-                variant="dark"
+                variant={isSelectedAnim(i) ? "light" : "dark"}
                 key={anim.name}
               >
                 <AnimIcon className="me-1" />
