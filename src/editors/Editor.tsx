@@ -16,7 +16,7 @@ const ScreenContainer = styled.div`
   margin: 16px;
   overflow: hidden;
   border: 1px solid black;
-  width: fit-content;
+  width: 70vw;
 `;
 
 const PanelContainer = styled.div`

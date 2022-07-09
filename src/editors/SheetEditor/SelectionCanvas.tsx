@@ -17,16 +17,17 @@ import {
   TransformCanvasRenderingContext2D,
   toTransformedContext,
 } from "canvas-transform-context";
+import FitCanvas from "../../components/FitCanvas/FitCanvas";
 
-const CanvasLayer = styled.canvas<{ z: number }>`
+const CanvasLayer = styled(FitCanvas)<{ z: number }>`
   position: absolute;
   z-index: ${(props) => props.z};
 `;
 
-const CanvasContainer = styled.div<{ width: number; height: number }>`
+const CanvasContainer = styled.div`
   position: relative;
-  width: ${(props) => props.width}px;
-  height: ${(props) => props.height}px;
+  width: 100%;
+  height: 100%;
   background-color: white;
 `;
 
@@ -68,6 +69,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   const anchorRef = useRef<Point | undefined>();
   const [selection, setSelection] = useState<Rect>(new Rect());
 
+  // Init ctx
   useEffect(() => {
     const i_ctx = imageCanvasRef.current?.getContext("2d");
     const r_ctx = rectsCanvasRef.current?.getContext("2d");
@@ -81,6 +83,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
       selectCtxRef.current = toTransformedContext(s_ctx);
   }, []);
 
+  // Memos
   const imageData = useMemo(() => {
     const rectImage = new ImageData(
       new Uint8ClampedArray(image.data),
@@ -102,12 +105,13 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     return canvas;
   }, [image.data, image.height, image.width, rects]);
 
-  // Drawing
+  // Draw functions
   const drawImage = useCallback(() => {
     const ctx = imageCtxRef.current;
     if (!ctx) return;
 
     ctx.clearCanvas();
+
     ctx.drawImage(imageData, 0, 0);
   }, [imageData]);
 
@@ -192,15 +196,13 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
 
           setSelection(new Rect(left, top, width, height));
           onSelect(intersects);
-
-          drawSelection();
         }
       } else {
         drawImage();
         drawRects();
       }
     },
-    [contexts, drawImage, drawRects, drawSelection, onSelect, rects, selection]
+    [contexts, drawImage, drawRects, onSelect, rects, selection]
   );
 
   const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(
@@ -239,24 +241,12 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   }, [contexts, draw, editorContext.value.zoom]);
 
   return (
-    <CanvasContainer width={image.width} height={image.height}>
-      <CanvasLayer
-        z={1}
-        ref={imageCanvasRef}
-        width={image.width}
-        height={image.height}
-      />
-      <CanvasLayer
-        z={2}
-        ref={rectsCanvasRef}
-        width={image.width}
-        height={image.height}
-      />
+    <CanvasContainer>
+      <CanvasLayer z={1} ref={imageCanvasRef} />
+      <CanvasLayer z={2} ref={rectsCanvasRef} />
       <CanvasLayer
         z={3}
         ref={selectCanvasRef}
-        width={image.width}
-        height={image.height}
         onMouseDown={onMouseDown}
         onMouseUp={onMouseUp}
         onMouseMove={onMouseMove}

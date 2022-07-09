@@ -6,6 +6,7 @@ import { Button, ButtonGroup } from "react-bootstrap";
 import { mergeRects } from "../../lib/blob-detection";
 import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
 import useHistory from "../../hooks/useHistory";
+import useChangeDetector from "../../hooks/useChangeDetector";
 
 interface SheetEditorProps {
   sheet: Sheet | undefined;
@@ -29,6 +30,10 @@ const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
   }, [setInitial, sheet]);
 
   const [selected, setSelected] = useState<Rect[]>([]);
+
+  useChangeDetector(sheet, () => {
+    setSelected([]);
+  });
 
   const mergeSelected = useCallback(() => {
     if (selected.length === 0) {
