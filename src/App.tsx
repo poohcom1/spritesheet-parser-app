@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { getImageData, openFile } from "./lib/image";
 import styled from "styled-components";
-import { Nav, Navbar, NavDropdown } from "react-bootstrap";
+import { Badge, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import SheetEditor from "./editors/SheetEditor/SheetEditor";
 import Sidebar from "./sidebar/Sidebar";
 import {
@@ -117,19 +117,40 @@ function App() {
           <ToolBar>
             <div className="d-flex">
               <div
-                className="d-flex overflow-hidden  rounded align-items-center text-white-50 p-2"
+                className="d-flex overflow-hidden rounded align-items-center text-white-50 p-2"
                 style={{ width: "150px", border: "1px solid grey" }}
               >
                 {currentAnim?.name ??
                   currentSheet?.name ??
                   (loading ? "Loading..." : "")}
               </div>
-              <ClearButton className="me-1" onClick={zoomIn}>
-                <ZoomInIcon />
-              </ClearButton>
-              <ClearButton className="me-1" onClick={zoomOut}>
-                <ZoomOutIcon />
-              </ClearButton>
+              <div
+                className="d-flex ms-2 rounded justify-content-start align-items-center text-white-50 p-1"
+                style={{ border: "1px solid grey" }}
+              >
+                <span>Move:</span>
+                <Badge className="m-1" bg="secondary">
+                  Ctrl + drag
+                </Badge>
+                <span>Zoom:</span>
+                <Badge className="m-1" bg="secondary">
+                  Scroll
+                </Badge>
+                <div
+                  style={{
+                    width: "4px",
+                    height: "70%",
+                    borderRight: "1px solid grey",
+                    marginRight: "4px",
+                  }}
+                />
+                <ClearButton className="me-1" onClick={zoomIn}>
+                  <ZoomInIcon />
+                </ClearButton>
+                <ClearButton onClick={zoomOut}>
+                  <ZoomOutIcon />
+                </ClearButton>
+              </div>
             </div>
           </ToolBar>
 

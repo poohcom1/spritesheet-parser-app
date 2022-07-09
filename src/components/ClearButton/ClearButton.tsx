@@ -8,7 +8,12 @@ const ClearButton = styled.button`
 
   padding: 8px;
 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   width: fit-content;
+  height: fit-content;
 
   &:hover {
     background-color: #99999955;
