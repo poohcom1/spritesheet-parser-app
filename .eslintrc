@@ -20,7 +20,7 @@
   },
   "plugins": ["react", "react-hooks", "@typescript-eslint", "unused-imports"],
   "rules": {
-    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-imports": "warn",
     "@typescript-eslint/no-unused-vars": [
       "warn",
       {
@@ -30,8 +30,9 @@
         "argsIgnorePattern": "^_"
       }
     ],
-    "no-use-before-define": "off",
     "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/ban-ts-comment": "warn",
+    "no-use-before-define": "off",
     "react/react-in-jsx-scope": "off",
     "prefer-const": "warn"
   },

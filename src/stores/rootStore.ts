@@ -49,9 +49,40 @@ const rootStore = combine(rootState, (set, get) => ({
     sheet.animations.push({
       name: name || "Animation #" + sheet.animations.length,
       frames,
+      padding: { x: 0, y: 0 },
+
+      display: {
+        zoom: 0,
+      },
     });
 
     set({ sheets: [...get().sheets] });
+
+    return true;
+  },
+
+  editAnimation(update: Partial<Frames>): boolean {
+    const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
+    if (!sheet) return false;
+    const anim = sheet.animations[get().selectedAnimation];
+    if (!anim) return false;
+
+    sheet.animations[get().selectedAnimation] = { ...anim, ...update };
+
+    set({ sheets: get().sheets });
+
+    return true;
+  },
+
+  // Specific display control
+  setAnimationDisplay(display: Partial<FramesDisplay>): boolean {
+    const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
+    if (!sheet) return false;
+    const anim = sheet.animations[get().selectedAnimation];
+    if (!anim) return false;
+
+    anim.display = { ...anim.display, ...display };
+    set({ sheets: get().sheets });
 
     return true;
   },

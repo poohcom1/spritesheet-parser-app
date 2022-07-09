@@ -155,15 +155,7 @@ function App() {
             </div>
           </ToolBar>
 
-          {!currentAnim ? (
-            <SheetEditor />
-          ) : (
-            <AnimationEditor
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              image={currentSheet!.image}
-              animation={currentAnim}
-            />
-          )}
+          {!currentAnim ? <SheetEditor /> : <AnimationEditor />}
         </div>
       </MainContainer>
     </AppContainer>

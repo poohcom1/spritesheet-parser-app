@@ -10,7 +10,7 @@ import {
 } from "react";
 import styled from "styled-components";
 import MSER, { Rect } from "blob-detection-ts";
-import { mouse2transformCanvas } from "lib/canvas";
+import { mouse2canvas, mouse2transformCanvas } from "lib/canvas";
 import useDisplayStore from "stores/displayStore";
 import {
   TransformCanvasRenderingContext2D,
@@ -54,6 +54,8 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   const rectsCtxRef = useRef<TransformCanvasRenderingContext2D | undefined>();
   const selectCtxRef = useRef<TransformCanvasRenderingContext2D | undefined>();
 
+  const mousePosRef = useRef({ x: 0, y: 0 });
+
   const anchorRef = useRef<Point | undefined>();
   const [selection, setSelection] = useState<Rect>(new Rect());
 
@@ -63,8 +65,14 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     const r_ctx = rectsCanvasRef.current?.getContext("2d");
     const s_ctx = selectCanvasRef.current?.getContext("2d");
 
-    if (i_ctx && !imageCtxRef.current)
+    if (i_ctx && !imageCtxRef.current) {
       imageCtxRef.current = toTransformedContext(i_ctx);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (i_ctx as any).webkitImageSmoothingEnabled = false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (i_ctx as any).mozImageSmoothingEnabled = false;
+      i_ctx.imageSmoothingEnabled = false;
+    }
     if (r_ctx && !rectsCtxRef.current)
       rectsCtxRef.current = toTransformedContext(r_ctx);
     if (s_ctx && !selectCtxRef.current)
@@ -177,6 +185,9 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
+      if (selectCanvasRef.current)
+        mousePosRef.current = mouse2canvas(e, selectCanvasRef.current);
+
       if (!(e.ctrlKey || e.metaKey)) {
         if (selectCtxRef.current && anchorRef.current) {
           const begin = anchorRef.current;
@@ -220,7 +231,10 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   );
 
   const onWheel: WheelEventHandler<HTMLCanvasElement> = useCallback(
-    (e) => withContexts((ctx) => ctx.zoom(-Math.sign(e.deltaY))),
+    (e) =>
+      withContexts((ctx) =>
+        ctx.zoom(-Math.sign(e.deltaY), 1.1, mousePosRef.current)
+      ),
     [withContexts]
   );
 

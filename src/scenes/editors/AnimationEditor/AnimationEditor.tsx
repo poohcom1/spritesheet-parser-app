@@ -2,6 +2,7 @@ import { getFramesSize } from "lib/blob-detection";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import { Button, ButtonGroup, FormControl, FormLabel } from "react-bootstrap";
 import {
+  AiFillPauseCircle,
   AiFillPlayCircle,
   AiFillStepBackward,
   AiFillStepForward,
@@ -9,38 +10,45 @@ import {
   AiOutlinePlus,
 } from "react-icons/ai";
 import useDisplayStore from "stores/displayStore";
+import useRootStore from "stores/rootStore";
 import Editor, { PanelContainer, PanelSection } from "../Editor";
 
-interface AnimationEditorProps {
-  image: ImageData;
-  animation: Frames;
-}
+const AnimationEditor: FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const image = useRootStore((s) => s.getSheet()?.image)!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const animation = useRootStore((s) => s.getAnimation())!;
 
-const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Data
+  const padding = animation.padding;
+
+  // Display
   const onZoom = useDisplayStore((s) => s.onZoom);
 
-  const [zoom, setZoom] = useState(0);
+  const zoom = animation.display.zoom;
+  const setZoom = useRootStore(
+    (s) => (zoom: number) => s.setAnimationDisplay({ zoom })
+  );
 
   useEffect(() => {
     onZoom(
       () => setZoom(zoom + 1),
       () => setZoom(zoom - 1)
     );
-  }, [onZoom, zoom]);
-
-  const [size, setSize] = useState(getFramesSize(animation.frames));
-  const [padding, setPadding] = useState({ x: 10, y: 10 });
+  }, [onZoom, setZoom, zoom]);
 
   const [fps, setFps] = useState(12);
 
   // Animation
+  const [size, setSize] = useState({ width: 0, height: 0 });
+
   const [playing, setPlaying] = useState(true);
 
   const [i, setI] = useState(0);
 
   const intervalRef = useRef<NodeJS.Timer | undefined>();
 
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
@@ -88,6 +96,7 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
           <div
             className="d-flex justify-content-center align-items-center"
             style={{ width: "100%", height: "100%" }}
+            onWheel={(e) => setZoom(zoom - Math.sign(e.deltaY))}
           >
             <canvas
               style={{
@@ -114,13 +123,17 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
                       [animation.frames.length, i]
                     )}
                   >
-                    <AiFillStepBackward />
+                    <AiFillStepBackward size={25} />
                   </Button>
                   <Button
                     className="d-flex justify-content-center align-items-center"
                     onClick={() => setPlaying(!playing)}
                   >
-                    <AiFillPlayCircle />
+                    {playing ? (
+                      <AiFillPauseCircle size={25} />
+                    ) : (
+                      <AiFillPlayCircle size={25} />
+                    )}
                   </Button>
                   <Button
                     className="d-flex justify-content-center align-items-center"
@@ -129,7 +142,7 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
                       [animation.frames.length, i]
                     )}
                   >
-                    <AiFillStepForward />
+                    <AiFillStepForward size={25} />
                   </Button>
                 </ButtonGroup>
               </div>
@@ -142,8 +155,7 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
                 </Button>
                 <FormControl
                   id="fps"
-                  style={{ width: "50px" }}
-                  className="rounded-0"
+                  style={{ width: "50px", borderRadius: 0 }}
                   type="text"
                   inputMode="numeric"
                   min={1}
@@ -157,6 +169,7 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
               </ButtonGroup>
               <p>Frame: {i}</p>
             </PanelSection>
+            <PanelSection header="Positioning"></PanelSection>
           </PanelContainer>
         }
       />

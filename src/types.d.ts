@@ -8,19 +8,28 @@ interface Point {
   y: number;
 }
 
-interface Frame {
-  position: Rect;
-  offset: Rect;
-}
-
-interface Frames {
-  name: string;
-  frames: Frame[];
-}
+// Store data
 
 interface Sheet {
   image: ImageData;
   rects: Rect[];
   name: string;
   animations: Frames[];
+}
+
+interface Frames {
+  name: string;
+  frames: Frame[];
+  padding: Point;
+
+  display: FramesDisplay;
+}
+
+interface Frame {
+  position: Rect;
+  offset: Rect;
+}
+
+interface FramesDisplay {
+  zoom: number;
 }
