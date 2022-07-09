@@ -72,7 +72,6 @@
     "webpack-dev-server": "^4.6.0",
     "webpack-manifest-plugin": "^4.0.2",
     "workbox-webpack-plugin": "^6.4.1",
-    "worker-plugin": "^5.0.1",
     "zustand": "^4.0.0-rc.1"
   },
   "devDependencies": {

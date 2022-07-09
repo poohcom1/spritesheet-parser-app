@@ -8,14 +8,19 @@ interface Point {
   y: number;
 }
 
-interface Sprites {
+interface Frame {
+  position: Rect;
+  offset: Rect;
+}
+
+interface Frames {
   name: string;
-  rects: Rect[];
+  frames: Frame[];
 }
 
 interface Sheet {
   image: ImageData;
   rects: Rect[];
   name: string;
-  animations: Sprites[];
+  animations: Frames[];
 }

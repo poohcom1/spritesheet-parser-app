@@ -7,7 +7,7 @@ import Editor from "../Editor";
 
 interface AnimationEditorProps {
   image: ImageData;
-  animation: Sprites;
+  animation: Frames;
 }
 
 const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
@@ -30,29 +30,29 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
     let i = 0;
 
     const loop = setInterval(() => {
-      const rect = animation.rects[i];
+      const pos = animation.frames[i].position;
 
       t_ctx.clearCanvas();
       t_ctx.drawImage(
         imgCanvas,
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
+        pos.x,
+        pos.y,
+        pos.width,
+        pos.height,
         0,
         0,
-        rect.width,
-        rect.height
+        pos.width,
+        pos.height
       );
 
       i++;
-      if (i >= animation.rects.length) i = 0;
+      if (i >= animation.frames.length) i = 0;
     }, 100);
 
     return () => {
       clearInterval(loop);
     };
-  }, [animation.rects, image]);
+  }, [animation.frames, image]);
 
   return (
     <>

@@ -12,7 +12,7 @@ const rootStore = combine(rootState, (set, get) => ({
   getSheet(): Sheet | undefined {
     return get().sheets[get().selectedSheet];
   },
-  getAnimation(): Sprites | undefined {
+  getAnimation(): Frames | undefined {
     return get().sheets[get().selectedSheet]?.animations[
       get().selectedAnimation
     ];
@@ -39,7 +39,10 @@ const rootStore = combine(rootState, (set, get) => ({
 
     sheet.animations.push({
       name: name || "Animation #" + sheet.animations.length,
-      rects,
+      frames: rects.map((r) => ({
+        position: r,
+        offset: new Rect(0, 0, 0, 0),
+      })),
     });
 
     set({ sheets: [...get().sheets] });

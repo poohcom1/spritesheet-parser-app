@@ -15,6 +15,7 @@ import useDisplayStore from "./stores/displayStore";
 import useRootStore from "./stores/rootStore";
 import { wrap } from "comlink";
 import { Rect } from "blob-detection-ts";
+import type { BlobDetectionWorker } from "./workers/blob-detection-worker";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
@@ -52,8 +53,7 @@ const worker = new Worker(
   }
 );
 
-const { blobDetection } =
-  wrap<import("./workers/blob-detection-worker").BlobDetectionWorker>(worker);
+const { blobDetection } = wrap<BlobDetectionWorker>(worker);
 
 function App() {
   const addSheet = useRootStore((s) => s.addSheet);
