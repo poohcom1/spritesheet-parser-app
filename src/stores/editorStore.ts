@@ -1,13 +1,13 @@
 import create from "zustand";
 import { combine } from "zustand/middleware";
 
-const displayState = {
+const editorState = {
   zoomInCallback: <() => void>(() => undefined),
   zoomOutCallback: <() => void>(() => undefined),
   height: 0,
 };
 
-const displayStore = combine(displayState, (set, get) => ({
+const editorStore = combine(editorState, (set, get) => ({
   onZoom(onZoomIn: () => void, onZoomOut: () => void) {
     set({ zoomInCallback: onZoomIn, zoomOutCallback: onZoomOut });
   },
@@ -22,6 +22,6 @@ const displayStore = combine(displayState, (set, get) => ({
   },
 }));
 
-const useDisplayStore = create(displayStore);
+const useEditorStore = create(editorStore);
 
-export default useDisplayStore;
+export default useEditorStore;

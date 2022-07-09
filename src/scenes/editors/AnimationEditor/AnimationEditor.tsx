@@ -1,5 +1,5 @@
 import { getFramesSize } from "lib/blob-detection";
-import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useMemo, useRef } from "react";
 import { Button, ButtonGroup, FormControl, FormLabel } from "react-bootstrap";
 import {
   AiFillPauseCircle,
@@ -9,49 +9,45 @@ import {
   AiOutlineMinus,
   AiOutlinePlus,
 } from "react-icons/ai";
-import useDisplayStore from "stores/displayStore";
+import useEditorStore from "stores/editorStore";
 import useRootStore from "stores/rootStore";
 import Editor, { PanelContainer, PanelSection } from "../Editor";
 import DPad from "./DPad";
 
 const AnimationEditor: FC = () => {
-  const image = useRootStore((s) => s.getSheet()?.image);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const image = useRootStore((s) => s.getSheet()?.image)!;
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const animation = useRootStore((s) => s.getAnimation())!;
 
-  // Display
-  const onZoom = useDisplayStore((s) => s.onZoom);
+  // Editor Display
+  const fps = animation.editor.fps;
+  const zoom = animation.editor.zoom;
+  const playing = animation.editor.playing;
+  const i = animation.editor.frameNo;
 
-  const zoom = animation.display.zoom;
-  const setZoom = useRootStore(
-    (s) => (zoom: number) => s.setAnimationDisplay({ zoom })
+  const setEditor = useRootStore((s) => s.setAnimationEditor);
+  const onZoom = useEditorStore((s) => s.onZoom);
+
+  useEffect(
+    () =>
+      onZoom(
+        () => setEditor({ zoom: zoom + 1 }),
+        () => setEditor({ zoom: zoom - 1 })
+      ),
+    [onZoom, setEditor, zoom]
   );
 
-  useEffect(() => {
-    onZoom(
-      () => setZoom(zoom + 1),
-      () => setZoom(zoom - 1)
-    );
-  }, [onZoom, setZoom, zoom]);
-
-  const [fps, setFps] = useState(12);
-
   // Animation
-  const [size, setSize] = useState({ width: 0, height: 0 });
-
-  const [playing, setPlaying] = useState(true);
-  const [i, setI] = useState(0);
+  const size = getFramesSize(animation.frames);
 
   // Init
-  useEffect(() => setSize(getFramesSize(animation.frames)), [animation.frames]);
-
   const imageCanvas = useMemo(() => {
-    if (image) {
-      const imgCanvas = document.createElement("canvas");
-      imgCanvas.width = image.width;
-      imgCanvas.height = image.height;
-      imgCanvas.getContext("2d")?.putImageData(image, 0, 0);
-      return imgCanvas;
-    } else return undefined;
+    const imgCanvas = document.createElement("canvas");
+    imgCanvas.width = image.width;
+    imgCanvas.height = image.height;
+    imgCanvas.getContext("2d")?.putImageData(image, 0, 0);
+    return imgCanvas;
   }, [image]);
 
   // Animation
@@ -59,14 +55,14 @@ const AnimationEditor: FC = () => {
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
-        setI(i + 1 >= animation.frames.length ? 0 : i + 1);
+        setEditor({ frameNo: i + 1 >= animation.frames.length ? 0 : i + 1 });
       }, 1000 / fps);
 
       return () => clearInterval(intervalRef.current);
     } else {
       clearInterval(intervalRef.current);
     }
-  }, [animation.frames.length, fps, i, playing]);
+  }, [animation.frames.length, fps, i, playing, setEditor]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frame = animation.frames[i] ?? animation.frames[0];
@@ -84,25 +80,28 @@ const AnimationEditor: FC = () => {
     )
   );
 
-  const ctx = canvasRef.current?.getContext("2d");
+  // Drawing
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
 
-  if (ctx && imageCanvas) {
-    ctx.canvas.width = size.width + animation.padding.x * 2;
-    ctx.canvas.height = size.height + animation.padding.y * 2;
+    if (ctx) {
+      ctx.canvas.width = size.width + animation.padding.x * 2;
+      ctx.canvas.height = size.height + animation.padding.y * 2;
 
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.drawImage(
-      imageCanvas,
-      frame.position.x,
-      frame.position.y,
-      frame.position.width,
-      frame.position.height,
-      frame.offset.left + animation.padding.x,
-      frame.offset.top + animation.padding.y,
-      frame.position.width,
-      frame.position.height
-    );
-  }
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.drawImage(
+        imageCanvas,
+        frame.position.x,
+        frame.position.y,
+        frame.position.width,
+        frame.position.height,
+        frame.offset.left + animation.padding.x,
+        frame.offset.top + animation.padding.y,
+        frame.position.width,
+        frame.position.height
+      );
+    }
+  }, [animation, frame, imageCanvas, size.height, size.width]);
 
   return (
     <>
@@ -111,7 +110,7 @@ const AnimationEditor: FC = () => {
           <div
             className="d-flex justify-content-center align-items-center"
             style={{ width: "100%", height: "100%" }}
-            onWheel={(e) => setZoom(zoom - Math.sign(e.deltaY))}
+            onWheel={(e) => setEditor({ zoom: zoom - Math.sign(e.deltaY) })}
           >
             <canvas
               style={{
@@ -133,15 +132,18 @@ const AnimationEditor: FC = () => {
                     className="d-flex justify-content-center align-items-center"
                     onClick={useCallback(
                       () =>
-                        setI(i - 1 >= 0 ? i - 1 : animation.frames.length - 1),
-                      [animation.frames.length, i]
+                        setEditor({
+                          frameNo:
+                            i - 1 >= 0 ? i - 1 : animation.frames.length - 1,
+                        }),
+                      [animation.frames.length, i, setEditor]
                     )}
                   >
                     <AiFillStepBackward size={25} />
                   </Button>
                   <Button
                     className="d-flex justify-content-center align-items-center"
-                    onClick={() => setPlaying(!playing)}
+                    onClick={() => setEditor({ playing: !playing })}
                   >
                     {playing ? (
                       <AiFillPauseCircle size={25} />
@@ -152,8 +154,11 @@ const AnimationEditor: FC = () => {
                   <Button
                     className="d-flex justify-content-center align-items-center"
                     onClick={useCallback(
-                      () => setI(i + 1 < animation.frames.length ? i + 1 : 0),
-                      [animation.frames.length, i]
+                      () =>
+                        setEditor({
+                          frameNo: i + 1 < animation.frames.length ? i + 1 : 0,
+                        }),
+                      [animation.frames.length, i, setEditor]
                     )}
                   >
                     <AiFillStepForward size={25} />
@@ -164,7 +169,9 @@ const AnimationEditor: FC = () => {
                 FPS:
               </FormLabel>
               <ButtonGroup>
-                <Button onClick={() => setFps(Math.max(fps - 1, 1))}>
+                <Button
+                  onClick={() => setEditor({ fps: Math.max(fps - 1, 1) })}
+                >
                   <AiOutlineMinus />
                 </Button>
                 <FormControl
@@ -175,9 +182,11 @@ const AnimationEditor: FC = () => {
                   min={1}
                   max={120}
                   value={fps}
-                  onChange={(e) => setFps(parseInt(e.target.value))}
+                  onChange={(e) => setEditor({ fps: parseInt(e.target.value) })}
                 />
-                <Button onClick={() => setFps(Math.min(fps + 1, 120))}>
+                <Button
+                  onClick={() => setEditor({ fps: Math.min(fps + 1, 120) })}
+                >
                   <AiOutlinePlus />
                 </Button>
               </ButtonGroup>

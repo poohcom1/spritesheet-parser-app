@@ -11,7 +11,7 @@ import {
 import styled from "styled-components";
 import MSER, { Rect } from "blob-detection-ts";
 import { mouse2canvas, mouse2transformCanvas } from "lib/canvas";
-import useDisplayStore from "stores/displayStore";
+import useEditorStore from "stores/editorStore";
 import {
   TransformCanvasRenderingContext2D,
   toTransformedContext,
@@ -44,7 +44,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   onSelect,
 }) => {
   // Editor context
-  const onZoom = useDisplayStore((s) => s.onZoom);
+  const onZoom = useEditorStore((s) => s.onZoom);
 
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const rectsCanvasRef = useRef<HTMLCanvasElement>(null);

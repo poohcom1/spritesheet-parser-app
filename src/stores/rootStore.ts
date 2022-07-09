@@ -51,8 +51,11 @@ const rootStore = combine(rootState, (set, get) => ({
       frames,
       padding: { x: 5, y: 5 },
 
-      display: {
+      editor: {
         zoom: 0,
+        fps: 12,
+        playing: true,
+        frameNo: 0,
       },
     });
 
@@ -75,13 +78,13 @@ const rootStore = combine(rootState, (set, get) => ({
   },
 
   // Specific display control
-  setAnimationDisplay(display: Partial<FramesDisplay>): boolean {
+  setAnimationEditor(editor: Partial<FramesEditor>): boolean {
     const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
     if (!sheet) return false;
     const anim = sheet.animations[get().selectedAnimation];
     if (!anim) return false;
 
-    anim.display = { ...anim.display, ...display };
+    anim.editor = { ...anim.editor, ...editor };
     set({ sheets: get().sheets });
 
     return true;

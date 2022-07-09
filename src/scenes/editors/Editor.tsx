@@ -1,6 +1,6 @@
 import { FC, ReactNode } from "react";
 import styled from "styled-components";
-import useDisplayStore from "stores/displayStore";
+import useEditorStore from "stores/editorStore";
 
 interface EditorProps {
   screenElement: JSX.Element;
@@ -82,7 +82,7 @@ export const PanelSection = ({
 };
 
 const Editor: FC<EditorProps> = ({ screenElement, panelElement }) => {
-  const height = useDisplayStore((state) => state.height);
+  const height = useEditorStore((state) => state.height);
 
   return (
     <EditorContainer height={height}>

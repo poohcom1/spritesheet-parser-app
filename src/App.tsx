@@ -14,7 +14,7 @@ import Sidebar from "scenes/sidebar/Sidebar";
 import ClearButton from "components/ClearButton/ClearButton";
 import AnimationEditor from "scenes/editors/AnimationEditor/AnimationEditor";
 import { useEffect } from "react";
-import useDisplayStore from "stores/displayStore";
+import useEditorStore from "stores/editorStore";
 import useRootStore from "stores/rootStore";
 import { wrap } from "comlink";
 
@@ -61,9 +61,9 @@ function App() {
   const currentSheet = useRootStore((s) => s.getSheet());
   const currentAnim = useRootStore((s) => s.getAnimation());
 
-  const zoomIn = useDisplayStore((s) => s.zoomIn);
-  const zoomOut = useDisplayStore((s) => s.zoomOut);
-  const setHeight = useDisplayStore((s) => s.setHeight);
+  const zoomIn = useEditorStore((s) => s.zoomIn);
+  const zoomOut = useEditorStore((s) => s.zoomOut);
+  const setHeight = useEditorStore((s) => s.setHeight);
 
   const [loading, setLoading] = useState(false);
 

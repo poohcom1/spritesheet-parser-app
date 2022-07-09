@@ -22,7 +22,7 @@ interface Frames {
   frames: Frame[];
   padding: Point;
 
-  display: FramesDisplay;
+  editor: FramesEditor;
 }
 
 interface Frame {
@@ -30,6 +30,10 @@ interface Frame {
   offset: Rect;
 }
 
-interface FramesDisplay {
+interface FramesEditor {
   zoom: number;
+  fps: number;
+  playing: boolean;
+
+  frameNo: number;
 }
