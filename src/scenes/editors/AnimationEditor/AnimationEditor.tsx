@@ -1,8 +1,6 @@
-import {
-  toTransformedContext,
-  TransformCanvasRenderingContext2D,
-} from "canvas-transform-context";
-import { FC, useEffect, useRef } from "react";
+import { getFramesSize } from "lib/blob-detection";
+import { FC, useEffect, useRef, useState } from "react";
+import useDisplayStore from "stores/displayStore";
 import Editor from "../Editor";
 
 interface AnimationEditorProps {
@@ -12,35 +10,38 @@ interface AnimationEditorProps {
 
 const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const ctxRef = useRef<TransformCanvasRenderingContext2D | null>(null);
+
+  const zoom = useDisplayStore((s) => s.zoom);
+
+  const [size, setSize] = useState(getFramesSize(animation.frames));
+  const [padding, setPadding] = useState({ x: 10, y: 10 });
 
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
 
-    if (ctx && !ctxRef.current) ctxRef.current = toTransformedContext(ctx);
-    if (!ctxRef.current) return; // stfu typescript
+    if (!ctx) return;
 
     const imgCanvas = document.createElement("canvas");
     imgCanvas.width = image.width;
     imgCanvas.height = image.height;
     imgCanvas.getContext("2d")?.putImageData(image, 0, 0);
 
-    const t_ctx = ctxRef.current;
+    setSize(getFramesSize(animation.frames));
 
     let i = 0;
 
     const loop = setInterval(() => {
       const frame = animation.frames[i];
 
-      t_ctx.clearCanvas();
-      t_ctx.drawImage(
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.drawImage(
         imgCanvas,
         frame.position.x,
         frame.position.y,
         frame.position.width,
         frame.position.height,
-        frame.offset.left,
-        frame.offset.top,
+        frame.offset.left + padding.x,
+        frame.offset.top + padding.y,
         frame.position.width,
         frame.position.height
       );
@@ -52,12 +53,28 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
     return () => {
       clearInterval(loop);
     };
-  }, [animation.frames, image]);
+  }, [animation.frames, image, padding.x, padding.y]);
 
   return (
     <>
       <Editor
-        screenElement={<canvas width={1000} height={1000} ref={canvasRef} />}
+        screenElement={
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{ width: "100%", height: "100%" }}
+          >
+            <canvas
+              style={{
+                transform: `scale(${Math.pow(1.1, zoom)})`,
+                flexGrow: "0",
+                flexShrink: "0",
+              }}
+              width={size.width + padding.x * 2}
+              height={size.height + padding.y * 2}
+              ref={canvasRef}
+            />
+          </div>
+        }
         panelElement={<></>}
       />
     </>

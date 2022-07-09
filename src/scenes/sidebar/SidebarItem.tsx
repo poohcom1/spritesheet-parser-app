@@ -7,6 +7,7 @@ import { BsFillFileSpreadsheetFill as SheetIcon } from "react-icons/bs";
 import { MdOutlineAnimation as AnimIcon } from "react-icons/md";
 import styled from "styled-components";
 import useRootStore from "stores/rootStore";
+import useDisplayStore from "stores/displayStore";
 
 const ClearButton = styled.a`
   text-decoration: none;
@@ -41,6 +42,8 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
   const selectedSheet = useRootStore((s) => s.selectedSheet);
   const selectedAnimation = useRootStore((s) => s.selectedAnimation);
 
+  const setZoom = useDisplayStore((s) => s.setZoom);
+
   return (
     <AccordionItem className="p-0 bg-dark h-25" eventKey={`${sheetInd}`}>
       <AccordionHeader className="text-white bg-dark">
@@ -52,6 +55,7 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
           onClick={(e) => {
             e.stopPropagation();
             selectSheet(sheetInd);
+            setZoom(0);
           }}
           className={`m-0 ${
             selectedSheet === sheetInd &&
@@ -73,7 +77,10 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
                   selectedAnimation === i &&
                   "text-decoration-underline"
                 }`}
-                onClick={() => selectAnim(sheetInd, i)}
+                onClick={() => {
+                  selectAnim(sheetInd, i);
+                  setZoom(0);
+                }}
                 variant="dark"
                 key={anim.name}
               >

@@ -67,10 +67,8 @@ describe("blob-detection", () => {
 
     it("should align frames on a single row", () => {
       const frames = [
-        create_frame(0, 0, 0, 10),
         create_frame(0, 0, 0, 20),
-        create_frame(0, 0, 0, 30),
-        create_frame(0, 0, 0, 20),
+        create_frame(0, 0, 0, 15),
         create_frame(0, 0, 0, 10),
         create_frame(0, 0, 0, 5),
       ];
@@ -79,29 +77,43 @@ describe("blob-detection", () => {
 
       expect(frames.map((f) => f.offset)).toStrictEqual([
         create_pos_rect(0, 0, 0, 0),
-        create_pos_rect(0, -10, 0, 0),
-        create_pos_rect(0, -20, 0, 0),
-        create_pos_rect(0, -10, 0, 0),
-        create_pos_rect(0, 0, 0, 0),
         create_pos_rect(0, 5, 0, 0),
+        create_pos_rect(0, 10, 0, 0),
+        create_pos_rect(0, 15, 0, 0),
+      ]);
+    });
+
+    it("should align frames to the greatest height", () => {
+      const frames = [
+        create_frame(0, 0, 0, 5),
+        create_frame(0, 0, 0, 10),
+        create_frame(0, 0, 0, 7),
+      ];
+
+      alignFramesVertically(frames);
+
+      expect(frames.map((f) => f.offset)).toStrictEqual([
+        create_pos_rect(0, 5, 0, 0),
+        create_pos_rect(0, 0, 0, 0),
+        create_pos_rect(0, 3, 0, 0),
       ]);
     });
 
     it("should align frames on two rows", () => {
       const frames = [
         create_frame(0, 0, 0, 10),
-        create_frame(0, 0, 0, 15),
+        create_frame(0, 0, 0, 5),
         create_frame(0, 50, 0, 10),
-        create_frame(0, 50, 0, 15),
+        create_frame(0, 50, 0, 5),
       ];
 
       alignFramesVertically(frames);
 
       expect(frames.map((f) => f.offset)).toStrictEqual([
         create_pos_rect(0, 0, 0, 0),
-        create_pos_rect(0, -5, 0, 0),
+        create_pos_rect(0, 5, 0, 0),
         create_pos_rect(0, 0, 0, 0),
-        create_pos_rect(0, -5, 0, 0),
+        create_pos_rect(0, 5, 0, 0),
       ]);
     });
   });

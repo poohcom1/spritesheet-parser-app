@@ -88,14 +88,40 @@ export function orderRects(rects: Rect[]): void {
   }
 }
 
+/**
+ * Aligns frames to the bottom by adjusting the offset so that
+ *  every frame touches the bottom
+ * @param frames
+ * @returns
+ */
 export function alignFramesVertically(frames: Frame[]) {
   if (frames.length === 0) return;
 
-  const baseline = frames[0].position.height;
+  let baseline = 0;
 
-  for (let i = 1; i < frames.length; i++) {
-    const current = frames[i];
-
-    current.offset.top = baseline - current.position.height;
+  for (const frame of frames) {
+    baseline = Math.max(frame.position.height, baseline);
   }
+
+  for (const frame of frames) {
+    frame.offset.top = baseline - frame.position.height;
+  }
+}
+
+export function getFramesSize(frames: Frame[]): {
+  width: number;
+  height: number;
+} {
+  let width = 0;
+  let height = 0;
+
+  for (const frame of frames) {
+    width = Math.max(frame.offset.left + frame.position.width, width);
+    height = Math.max(frame.offset.top + frame.position.height, height);
+  }
+
+  return {
+    width,
+    height,
+  };
 }
