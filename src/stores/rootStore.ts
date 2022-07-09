@@ -1,6 +1,7 @@
 import create from "zustand";
 import { combine } from "zustand/middleware";
 import { Rect } from "blob-detection-ts";
+import { alignFramesVertically, orderRects } from "lib/blob-detection";
 
 const rootState = {
   sheets: [] as Sheet[],
@@ -37,12 +38,17 @@ const rootStore = combine(rootState, (set, get) => ({
 
     if (!sheet) return false;
 
+    orderRects(rects);
+    const frames = rects.map((r) => ({
+      position: r,
+      offset: new Rect(0, 0, 0, 0),
+    }));
+
+    alignFramesVertically(frames);
+
     sheet.animations.push({
       name: name || "Animation #" + sheet.animations.length,
-      frames: rects.map((r) => ({
-        position: r,
-        offset: new Rect(0, 0, 0, 0),
-      })),
+      frames,
     });
 
     set({ sheets: [...get().sheets] });

@@ -10,6 +10,12 @@ const DEFAULT_OPTIONS = {
   minDiversity: 0.33,
 };
 
+/**
+ * Detects blobs using MSER
+ * @param image
+ * @param options
+ * @returns
+ */
 export function blobDetection(
   image: ImageData | undefined,
   options: MSEROptions = DEFAULT_OPTIONS
@@ -31,6 +37,11 @@ export function blobDetection(
   return rects;
 }
 
+/**
+ * Merges a list of rects into a single rect
+ * @param rects
+ * @returns
+ */
 export function mergeRects(rects: Rect[]): Rect {
   const rect = cloneDeep(rects[0]);
 
@@ -53,15 +64,19 @@ function compareRect(blob1: Rect, blob2: Rect): number {
   }
 }
 
-export function orderRects(blobList: Rect[]): void {
-  blobList.sort(compareRect);
+/**
+ * Order rects from left to right and top to bottom
+ * @param rects
+ */
+export function orderRects(rects: Rect[]): void {
+  rects.sort(compareRect);
 
-  const previousBlob = blobList[0] as Rect & { row: number; col: number };
+  const previousBlob = rects[0] as Rect & { row: number; col: number };
   previousBlob.row = 0;
   previousBlob.col = 0;
 
-  for (let i = 1; i < blobList.length; i++) {
-    const currentBlob = blobList[i] as Rect & { row: number; col: number };
+  for (let i = 1; i < rects.length; i++) {
+    const currentBlob = rects[i] as Rect & { row: number; col: number };
 
     if (rectOverlapsInDirection(currentBlob, previousBlob)) {
       currentBlob.col = previousBlob.col + 1;
@@ -70,5 +85,17 @@ export function orderRects(blobList: Rect[]): void {
       currentBlob.col = 0;
       currentBlob.row = previousBlob.row + 1;
     }
+  }
+}
+
+export function alignFramesVertically(frames: Frame[]) {
+  if (frames.length === 0) return;
+
+  const baseline = frames[0].position.height;
+
+  for (let i = 1; i < frames.length; i++) {
+    const current = frames[i];
+
+    current.offset.top = baseline - current.position.height;
   }
 }

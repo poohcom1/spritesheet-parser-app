@@ -4,7 +4,7 @@ import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
 import Editor, { PanelSection } from "../Editor";
 import SelectionCanvas from "./SelectionCanvas";
 import { Button, ButtonGroup } from "react-bootstrap";
-import { mergeRects, orderRects } from "lib/blob-detection";
+import { mergeRects } from "lib/blob-detection";
 import useHistory from "hooks/useHistory";
 import useChangeDetector from "hooks/useChangeDetector";
 import useRootStore from "stores/rootStore";
@@ -49,7 +49,6 @@ const SheetEditor: FC = () => {
   }, [push, rects, selected]);
 
   const animationCreated = useCallback(() => {
-    orderRects(selected);
     addAnimation(selected);
     setSelected([]);
   }, [addAnimation, selected]);

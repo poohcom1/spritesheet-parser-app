@@ -30,19 +30,19 @@ const AnimationEditor: FC<AnimationEditorProps> = ({ image, animation }) => {
     let i = 0;
 
     const loop = setInterval(() => {
-      const pos = animation.frames[i].position;
+      const frame = animation.frames[i];
 
       t_ctx.clearCanvas();
       t_ctx.drawImage(
         imgCanvas,
-        pos.x,
-        pos.y,
-        pos.width,
-        pos.height,
-        0,
-        0,
-        pos.width,
-        pos.height
+        frame.position.x,
+        frame.position.y,
+        frame.position.width,
+        frame.position.height,
+        frame.offset.left,
+        frame.offset.top,
+        frame.position.width,
+        frame.position.height
       );
 
       i++;
