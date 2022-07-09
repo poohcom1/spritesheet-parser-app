@@ -1,20 +1,19 @@
-import React, { useCallback, useContext } from "react";
+import React, { useCallback, useState } from "react";
 import { getImageData, openFile } from "./lib/image";
 import styled from "styled-components";
 import { Container, Nav, Navbar, NavDropdown } from "react-bootstrap";
 import SheetEditor from "./editors/SheetEditor/SheetEditor";
 import Sidebar from "./sidebar/Sidebar";
-import { Rect } from "blob-detection-ts";
-import { SpritesContext } from "./context/SpritesContext";
 import {
   AiOutlineZoomIn as ZoomInIcon,
   AiOutlineZoomOut as ZoomOutIcon,
 } from "react-icons/ai";
 import ClearButton from "./components/ClearButton/ClearButton";
-import { blobDetection, orderRects } from "./lib/blob-detection";
-import { EditorContext } from "./context/EditorContext";
+import { blobDetection } from "./lib/blob-detection";
 import AnimationEditor from "./editors/AnimationEditor/AnimationEditor";
 import { useEffect } from "react";
+import useDisplayStore from "./stores/displayStore";
+import useRootStore from "./stores/rootStore";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
@@ -45,62 +44,40 @@ const ToolBar = styled.div`
 `;
 
 function App() {
-  const {
-    value: sprites,
-    dispatch: dispatchSprite,
-    setValue: setSprites,
-  } = useContext(SpritesContext);
+  const sheets = useRootStore((s) => s.sheets);
+  const addSheet = useRootStore((s) => s.addSheet);
+  const currentSheet = useRootStore((s) => s.getSheet());
+  const currentAnim = useRootStore((s) => s.getAnimation());
 
-  const { setValue: setEditorContext } = useContext(EditorContext);
+  const zoomIn = useDisplayStore((s) => s.zoomIn);
+  const zoomOut = useDisplayStore((s) => s.zoomOut);
+  const setHeight = useDisplayStore((s) => s.setHeight);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setEditorContext({ height: EDITOR_SIZE });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setHeight(EDITOR_SIZE);
+  }, [setHeight]);
 
   const loadFile = useCallback(async () => {
     const file = await openFile();
 
     if (!file) return;
 
-    const imagesLen = sprites.sheets.length;
-
     const image = await getImageData(file);
     const rects = blobDetection(image);
 
-    setSprites({
-      sheets: [
-        ...sprites.sheets,
-        {
-          image,
-          rects,
-          name: file.name,
-          animations: [],
-        },
-      ],
-      selectedSheet: imagesLen,
+    addSheet({
+      image,
+      rects,
+      name: file.name,
+      animations: [],
     });
-  }, [setSprites, sprites.sheets]);
-
-  const onAnimationCreated = useCallback(
-    (rects: Rect[]) => {
-      orderRects(rects);
-
-      sprites.sheets[sprites.selectedSheet].animations.push({
-        name:
-          "Animation #" +
-          (sprites.sheets[sprites.selectedSheet].animations.length + 1),
-        rects,
-      });
-
-      dispatchSprite("sheets", [...sprites.sheets]);
-    },
-    [dispatchSprite, sprites.selectedSheet, sprites.sheets]
-  );
+  }, [addSheet]);
 
   return (
     <AppContainer className="d-flex h-100">
-      <Sidebar sheets={sprites.sheets} />
+      <Sidebar />
       <MainContainer>
         <HeaderBar variant="dark" bg="dark" expand="lg">
           <Container fluid>
@@ -129,40 +106,24 @@ function App() {
                 className="d-flex overflow-hidden  rounded align-items-center text-white-50 p-2"
                 style={{ width: "150px", border: "1px solid grey" }}
               >
-                {sprites.getAnimation()?.name ?? sprites.getSheet()?.name ?? ""}
+                {currentAnim?.name ?? currentSheet?.name ?? ""}
               </div>
-              <ClearButton
-                className="me-1"
-                onClick={() =>
-                  setEditorContext((s) => ({
-                    zoom: s.zoom + 1,
-                  }))
-                }
-              >
+              <ClearButton className="me-1" onClick={zoomIn}>
                 <ZoomInIcon />
               </ClearButton>
-              <ClearButton
-                className="me-1"
-                onClick={() =>
-                  setEditorContext((s) => ({
-                    zoom: s.zoom - 1,
-                  }))
-                }
-              >
+              <ClearButton className="me-1" onClick={zoomOut}>
                 <ZoomOutIcon />
               </ClearButton>
             </div>
           </ToolBar>
 
-          {sprites.selectedAnimation === -1 ? (
-            <SheetEditor
-              sheet={sprites.getSheet()}
-              onAnimationCreated={onAnimationCreated}
-            />
+          {!currentAnim ? (
+            <SheetEditor loading={loading} sheet={currentSheet} />
           ) : (
             <AnimationEditor
-              image={sprites.getSheet().image}
-              animation={sprites.getAnimation()}
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+              image={currentSheet!.image}
+              animation={currentAnim}
             />
           )}
         </div>

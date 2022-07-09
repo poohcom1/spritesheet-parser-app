@@ -1,6 +1,6 @@
-import { FC, ReactNode, useContext } from "react";
+import { FC, ReactNode } from "react";
 import styled from "styled-components";
-import { EditorContext } from "../context/EditorContext";
+import useDisplayStore from "../stores/displayStore";
 
 interface EditorProps {
   screenElement: JSX.Element;
@@ -52,7 +52,7 @@ export const PanelSection = ({
 };
 
 const Editor: FC<EditorProps> = ({ screenElement, panelElement }) => {
-  const height = useContext(EditorContext).value.height;
+  const height = useDisplayStore((state) => state.height);
 
   return (
     <EditorContainer height={height}>

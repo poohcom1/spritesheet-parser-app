@@ -7,13 +7,17 @@ import { mergeRects } from "../../lib/blob-detection";
 import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
 import useHistory from "../../hooks/useHistory";
 import useChangeDetector from "../../hooks/useChangeDetector";
+import useRootStore from "../../stores/rootStore";
 
 interface SheetEditorProps {
+  loading: boolean;
+
   sheet: Sheet | undefined;
-  onAnimationCreated(rects: Rect[]): void;
 }
 
-const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
+const SheetEditor: FC<SheetEditorProps> = ({ sheet, loading }) => {
+  const addAnimation = useRootStore((s) => s.addAnimation);
+
   const {
     current: rects,
     redo,
@@ -50,20 +54,24 @@ const SheetEditor: FC<SheetEditorProps> = ({ sheet, onAnimationCreated }) => {
   }, [push, rects, selected]);
 
   const animationCreated = useCallback(() => {
-    onAnimationCreated(selected);
+    addAnimation(rects);
     setSelected([]);
-  }, [onAnimationCreated, selected]);
+  }, [addAnimation, rects]);
 
   if (sheet) {
     return (
       <Editor
         screenElement={
-          <SelectionCanvas
-            onSelect={setSelected}
-            image={sheet.image}
-            rects={rects}
-            selectedRects={selected}
-          />
+          loading ? (
+            <>Loading...</>
+          ) : (
+            <SelectionCanvas
+              onSelect={setSelected}
+              image={sheet.image}
+              rects={rects}
+              selectedRects={selected}
+            />
+          )
         }
         panelElement={
           <>

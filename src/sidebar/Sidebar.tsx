@@ -1,11 +1,8 @@
 import { FC } from "react";
 import { Accordion } from "react-bootstrap";
 import styled from "styled-components";
+import useRootStore from "../stores/rootStore";
 import SidebarItem from "./SidebarItem";
-
-interface SidebarProps {
-  sheets: Sheet[];
-}
 
 const SidebarContainer = styled.div`
   padding: 0px;
@@ -14,7 +11,9 @@ const SidebarContainer = styled.div`
   width: 15vw;
 `;
 
-const Sidebar: FC<SidebarProps> = ({ sheets }) => {
+const Sidebar: FC = () => {
+  const sheets = useRootStore((s) => s.sheets);
+
   return (
     <SidebarContainer className="bg-dark">
       <Accordion className="border-0" defaultActiveKey={["0"]} alwaysOpen>

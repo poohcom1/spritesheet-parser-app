@@ -1,22 +1,45 @@
-import { FC, useContext } from "react";
+import { FC } from "react";
 import { Button } from "react-bootstrap";
 import AccordionBody from "react-bootstrap/esm/AccordionBody";
 import AccordionHeader from "react-bootstrap/esm/AccordionHeader";
 import AccordionItem from "react-bootstrap/esm/AccordionItem";
 import { BsFillFileSpreadsheetFill as SheetIcon } from "react-icons/bs";
 import { MdOutlineAnimation as AnimIcon } from "react-icons/md";
-import ClearButton from "../components/ClearButton/ClearButton";
-import { SpritesContext } from "../context/SpritesContext";
+import styled from "styled-components";
+import useRootStore from "../stores/rootStore";
+
+const ClearButton = styled.a`
+  text-decoration: none;
+
+  color: white;
+  background-color: transparent;
+  border: none;
+  border-radius: 5px;
+
+  padding: 8px;
+
+  width: fit-content;
+
+  &:hover {
+    background-color: #99999955;
+  }
+
+  &:active {
+    background-color: #99999999;
+  }
+`;
 
 interface SidebarItemProps {
   sheetInd: number;
   sheet: Sheet;
 }
+
 const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
-  const {
-    setValue: setSprite,
-    value: { selectedAnimation, selectedSheet },
-  } = useContext(SpritesContext);
+  const selectSheet = useRootStore((s) => s.selectSheet);
+  const selectAnim = useRootStore((s) => s.selectAnimation);
+
+  const selectedSheet = useRootStore((s) => s.selectedSheet);
+  const selectedAnimation = useRootStore((s) => s.selectedAnimation);
 
   return (
     <AccordionItem className="p-0 bg-dark h-25" eventKey={`${sheetInd}`}>
@@ -28,10 +51,7 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
           }}
           onClick={(e) => {
             e.stopPropagation();
-            setSprite({
-              selectedSheet: sheetInd,
-              selectedAnimation: -1,
-            });
+            selectSheet(sheetInd);
           }}
           className={`m-0 ${
             selectedSheet === sheetInd &&
@@ -53,12 +73,7 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
                   selectedAnimation === i &&
                   "text-decoration-underline"
                 }`}
-                onClick={() =>
-                  setSprite({
-                    selectedSheet: sheetInd,
-                    selectedAnimation: i,
-                  })
-                }
+                onClick={() => selectAnim(sheetInd, i)}
                 variant="dark"
                 key={anim.name}
               >

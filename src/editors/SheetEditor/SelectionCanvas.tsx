@@ -11,8 +11,7 @@ import {
 import styled from "styled-components";
 import MSER, { Rect } from "blob-detection-ts";
 import { mouse2transformCanvas } from "../../lib/canvas";
-import { useContext } from "react";
-import { EditorContext } from "../../context/EditorContext";
+import useDisplayStore from "../../stores/displayStore";
 import {
   TransformCanvasRenderingContext2D,
   toTransformedContext,
@@ -55,8 +54,8 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   onSelect,
 }) => {
   // Editor context
-  const editorContext = useContext(EditorContext);
-  const setEditorValue = editorContext.setValue;
+  const zoom = useDisplayStore((s) => s.zoom);
+  const setZoom = useDisplayStore((s) => s.setZoom);
 
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const rectsCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -216,7 +215,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     [contexts, drawSelection]
   );
 
-  const zoomRef = useRef(editorContext.value.zoom);
+  const zoomRef = useRef(zoom);
 
   const onWheel: WheelEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
@@ -224,21 +223,19 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
         e.preventDefault();
       }
 
-      setEditorValue({
-        zoom: editorContext.value.zoom - Math.sign(e.deltaY),
-      });
+      setZoom(zoom - Math.sign(e.deltaY));
     },
-    [setEditorValue, editorContext.value.zoom]
+    [setZoom, zoom]
   );
 
   useEffect(() => {
-    if (editorContext.value.zoom !== zoomRef.current) {
-      const diff = editorContext.value.zoom - zoomRef.current;
-      zoomRef.current = editorContext.value.zoom;
+    if (zoom !== zoomRef.current) {
+      const diff = zoom - zoomRef.current;
+      zoomRef.current = zoom;
       withContexts(contexts(), (ctx) => ctx.zoom(diff));
       draw();
     }
-  }, [contexts, draw, editorContext.value.zoom]);
+  }, [contexts, draw, zoom]);
 
   return (
     <CanvasContainer>
