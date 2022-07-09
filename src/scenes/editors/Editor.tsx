@@ -12,18 +12,22 @@ const EditorContainer = styled.div<{ height: number }>`
   display: flex;
 `;
 
-const ScreenContainer = styled.div`
+const Screen = styled.div`
   margin: 16px;
   overflow: hidden;
   border: 1px solid black;
-  width: 70%;
+  width: 77%;
 `;
 
-const PanelContainer = styled.div`
+const Panel = styled.div`
   padding: 16px;
   height: 100%;
   color: white;
   flex-direction: column;
+
+  max-width: 300px;
+
+  flex-grow: 1;
 `;
 
 export const PanelSectionHeader: FC<{ text: string }> = ({ text = "" }) => {
@@ -36,6 +40,32 @@ export const PanelSectionHeader: FC<{ text: string }> = ({ text = "" }) => {
   );
 };
 
+const _PanelContainer = styled.div`
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+export const PanelContainer: FC<{ title: string; children?: ReactNode }> = ({
+  title,
+  children,
+}) => (
+  <_PanelContainer>
+    <h4>{title}</h4>
+    {children}
+  </_PanelContainer>
+);
+
+const _PanelSection = styled.div`
+  width: 100%;
+
+  * {
+    margin-bottom: 4px;
+  }
+`;
+
 export const PanelSection = ({
   header,
   children,
@@ -44,10 +74,10 @@ export const PanelSection = ({
   children?: ReactNode;
 }) => {
   return (
-    <div>
+    <_PanelSection>
       <PanelSectionHeader text={header} />
       <div className="p-1">{children}</div>
-    </div>
+    </_PanelSection>
   );
 };
 
@@ -56,8 +86,8 @@ const Editor: FC<EditorProps> = ({ screenElement, panelElement }) => {
 
   return (
     <EditorContainer height={height}>
-      <ScreenContainer>{screenElement}</ScreenContainer>
-      <PanelContainer>{panelElement}</PanelContainer>
+      <Screen>{screenElement}</Screen>
+      <Panel>{panelElement}</Panel>
     </EditorContainer>
   );
 };

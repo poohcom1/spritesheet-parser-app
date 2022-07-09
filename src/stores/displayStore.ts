@@ -2,19 +2,20 @@ import create from "zustand";
 import { combine } from "zustand/middleware";
 
 const displayState = {
-  zoom: 0,
+  zoomInCallback: <() => void>(() => undefined),
+  zoomOutCallback: <() => void>(() => undefined),
   height: 0,
 };
 
 const displayStore = combine(displayState, (set, get) => ({
-  setZoom(zoom: number) {
-    set({ zoom });
+  onZoom(onZoomIn: () => void, onZoomOut: () => void) {
+    set({ zoomInCallback: onZoomIn, zoomOutCallback: onZoomOut });
   },
   zoomIn() {
-    set({ zoom: get().zoom + 1 });
+    get().zoomInCallback();
   },
   zoomOut() {
-    set({ zoom: get().zoom - 1 });
+    get().zoomOutCallback();
   },
   setHeight(height: number) {
     set({ height });

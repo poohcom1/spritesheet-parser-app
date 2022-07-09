@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useState } from "react";
 import { Rect } from "blob-detection-ts";
 import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
-import Editor, { PanelSection } from "../Editor";
+import Editor, { PanelContainer, PanelSection } from "../Editor";
 import SelectionCanvas from "./SelectionCanvas";
 import { Button, ButtonGroup } from "react-bootstrap";
 import { mergeRects } from "lib/blob-detection";
@@ -65,8 +65,7 @@ const SheetEditor: FC = () => {
           />
         }
         panelElement={
-          <>
-            <h4>Sheet Inspector</h4>
+          <PanelContainer title="Sheet Inspector">
             <PanelSection header="Animation">
               <Button
                 variant="secondary"
@@ -125,7 +124,7 @@ const SheetEditor: FC = () => {
                 </Button>
               </ButtonGroup>
             </PanelSection>
-          </>
+          </PanelContainer>
         }
       />
     );

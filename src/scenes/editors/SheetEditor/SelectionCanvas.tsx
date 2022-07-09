@@ -37,15 +37,6 @@ interface SelectionCanvasProps {
   onSelect(rects: Rect[]): void;
 }
 
-function withContexts(
-  contexts: (TransformCanvasRenderingContext2D | undefined)[],
-  callback: (ctx: TransformCanvasRenderingContext2D) => void
-) {
-  for (const ctx of contexts) {
-    if (ctx) callback(ctx);
-  }
-}
-
 const SelectionCanvas: FC<SelectionCanvasProps> = ({
   image,
   rects,
@@ -53,8 +44,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   onSelect,
 }) => {
   // Editor context
-  const zoom = useDisplayStore((s) => s.zoom);
-  const setZoom = useDisplayStore((s) => s.setZoom);
+  const onZoom = useDisplayStore((s) => s.onZoom);
 
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const rectsCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -152,20 +142,37 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     drawSelection();
   }, [drawImage, drawRects, drawSelection]);
 
+  const withContexts = useCallback(
+    (callback: (ctx: TransformCanvasRenderingContext2D) => void) => {
+      for (const ctx of contexts()) if (ctx) callback(ctx);
+      draw();
+    },
+    [contexts, draw]
+  );
+
   useEffect(draw, [draw]);
 
   const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
       if (e.ctrlKey || e.metaKey) {
-        withContexts(contexts(), (ctx) => ctx.beginPan(e.nativeEvent));
+        withContexts((ctx) => ctx.beginPan(e.nativeEvent));
       } else {
         if (selectCtxRef.current) {
-          anchorRef.current = mouse2transformCanvas(e, selectCtxRef.current);
+          const mousePos = mouse2transformCanvas(e, selectCtxRef.current);
+          anchorRef.current = mousePos;
+
           onSelect([]);
+          for (const rect of rects) {
+            if (rect.intersect(new Rect(mousePos.x, mousePos.y, 1, 1))) {
+              onSelect([rect]);
+
+              break;
+            }
+          }
         }
       }
     },
-    [contexts, onSelect]
+    [onSelect, rects, withContexts]
   );
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
@@ -181,6 +188,7 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
           const top = Math.min(begin.y, end.y);
 
           // Calculate selection
+          const selection = new Rect(left, top, width, height);
           const intersects: Rect[] = [];
 
           for (const rect of rects) {
@@ -190,46 +198,44 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
             }
           }
 
-          setSelection(new Rect(left, top, width, height));
+          setSelection(selection);
           onSelect(intersects);
         }
       } else {
-        withContexts(contexts(), (ctx) => ctx.pan(e.nativeEvent));
-        drawImage();
-        drawRects();
+        withContexts((ctx) => ctx.pan(e.nativeEvent));
       }
     },
-    [contexts, drawImage, drawRects, onSelect, rects, selection]
+    [onSelect, rects, withContexts]
   );
 
   const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
-      withContexts(contexts(), (ctx) => ctx.endPan(e.nativeEvent));
+      withContexts((ctx) => ctx.endPan(e.nativeEvent));
 
       anchorRef.current = undefined;
       setSelection(new Rect(0, 0, 0, 0));
       drawSelection();
     },
-    [contexts, drawSelection]
+    [drawSelection, withContexts]
   );
-
-  const zoomRef = useRef(zoom);
 
   const onWheel: WheelEventHandler<HTMLCanvasElement> = useCallback(
-    (e) => {
-      setZoom(zoom - Math.sign(e.deltaY));
-    },
-    [setZoom, zoom]
+    (e) => withContexts((ctx) => ctx.zoom(-Math.sign(e.deltaY))),
+    [withContexts]
   );
 
-  useEffect(() => {
-    if (zoom !== zoomRef.current) {
-      const diff = zoom - zoomRef.current;
-      zoomRef.current = zoom;
-      withContexts(contexts(), (ctx) => ctx.zoom(diff));
-      draw();
-    }
-  }, [contexts, draw, zoom]);
+  useEffect(
+    () =>
+      onZoom(
+        () => {
+          withContexts((ctx) => ctx.zoom(1));
+        },
+        () => {
+          withContexts((ctx) => ctx.zoom(-1));
+        }
+      ),
+    [contexts, onZoom, withContexts]
+  );
 
   const [canvasSize, setCanvasSize] = useState({ width: 1920, height: 1080 });
 
