@@ -1,21 +1,22 @@
 import React, { useCallback, useState } from "react";
-import { getImageData, openFile } from "./lib/image";
 import styled from "styled-components";
 import { Badge, Nav, Navbar, NavDropdown } from "react-bootstrap";
-import SheetEditor from "./editors/SheetEditor/SheetEditor";
-import Sidebar from "./sidebar/Sidebar";
 import {
   AiOutlineZoomIn as ZoomInIcon,
   AiOutlineZoomOut as ZoomOutIcon,
 } from "react-icons/ai";
-import ClearButton from "./components/ClearButton/ClearButton";
-import AnimationEditor from "./editors/AnimationEditor/AnimationEditor";
-import { useEffect } from "react";
-import useDisplayStore from "./stores/displayStore";
-import useRootStore from "./stores/rootStore";
-import { wrap } from "comlink";
 import { Rect } from "blob-detection-ts";
-import type { BlobDetectionWorker } from "./workers/blob-detection-worker";
+import { getImageData, openFile } from "lib/image";
+import type { BlobDetectionWorker } from "workers/blob-detection-worker";
+import SheetEditor from "scenes/editors/SheetEditor/SheetEditor";
+import Sidebar from "scenes/sidebar/Sidebar";
+
+import ClearButton from "components/ClearButton/ClearButton";
+import AnimationEditor from "scenes/editors/AnimationEditor/AnimationEditor";
+import { useEffect } from "react";
+import useDisplayStore from "stores/displayStore";
+import useRootStore from "stores/rootStore";
+import { wrap } from "comlink";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;

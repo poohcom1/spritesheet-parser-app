@@ -1,5 +1,5 @@
 import { expose } from "comlink";
-import { blobDetection } from "../lib/blob-detection";
+import { blobDetection } from "lib/blob-detection";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare type ReplaceReturnType<T extends (...a: any) => any, TNewReturn> = (

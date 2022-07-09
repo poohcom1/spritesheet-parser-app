@@ -1,6 +1,6 @@
 import { FC, ReactNode } from "react";
 import styled from "styled-components";
-import useDisplayStore from "../stores/displayStore";
+import useDisplayStore from "stores/displayStore";
 
 interface EditorProps {
   screenElement: JSX.Element;

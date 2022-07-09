@@ -10,8 +10,8 @@ import {
 } from "react";
 import styled from "styled-components";
 import MSER, { Rect } from "blob-detection-ts";
-import { mouse2transformCanvas } from "../../lib/canvas";
-import useDisplayStore from "../../stores/displayStore";
+import { mouse2transformCanvas } from "lib/canvas";
+import useDisplayStore from "stores/displayStore";
 import {
   TransformCanvasRenderingContext2D,
   toTransformedContext,

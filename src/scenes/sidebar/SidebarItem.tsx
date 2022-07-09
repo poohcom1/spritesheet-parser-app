@@ -6,7 +6,7 @@ import AccordionItem from "react-bootstrap/esm/AccordionItem";
 import { BsFillFileSpreadsheetFill as SheetIcon } from "react-icons/bs";
 import { MdOutlineAnimation as AnimIcon } from "react-icons/md";
 import styled from "styled-components";
-import useRootStore from "../stores/rootStore";
+import useRootStore from "stores/rootStore";
 
 const ClearButton = styled.a`
   text-decoration: none;

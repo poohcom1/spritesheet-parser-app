@@ -1,13 +1,13 @@
 import { FC, useCallback, useEffect, useState } from "react";
 import { Rect } from "blob-detection-ts";
+import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
 import Editor, { PanelSection } from "../Editor";
 import SelectionCanvas from "./SelectionCanvas";
 import { Button, ButtonGroup } from "react-bootstrap";
-import { mergeRects, orderRects } from "../../lib/blob-detection";
-import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
-import useHistory from "../../hooks/useHistory";
-import useChangeDetector from "../../hooks/useChangeDetector";
-import useRootStore from "../../stores/rootStore";
+import { mergeRects, orderRects } from "lib/blob-detection";
+import useHistory from "hooks/useHistory";
+import useChangeDetector from "hooks/useChangeDetector";
+import useRootStore from "stores/rootStore";
 
 const SheetEditor: FC = () => {
   const sheet = useRootStore((s) => s.getSheet());

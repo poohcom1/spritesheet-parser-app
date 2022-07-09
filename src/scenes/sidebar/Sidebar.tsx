@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { Accordion } from "react-bootstrap";
 import styled from "styled-components";
-import useRootStore from "../stores/rootStore";
+import useRootStore from "stores/rootStore";
 import SidebarItem from "./SidebarItem";
 
 const SidebarContainer = styled.div`

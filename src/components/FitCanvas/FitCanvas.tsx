@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { assignRefs } from "../../lib/jsx";
+import { assignRefs } from "lib/jsx";
 
 const FitCanvas: ForwardRefRenderFunction<
   HTMLCanvasElement,
