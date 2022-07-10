@@ -43,6 +43,10 @@ const AnimationEditor: FC = () => {
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
+  // Action var
+  const shiftDirection = useRef<"" | "x" | "y">("");
+
+  // Zoom
   useEffect(
     () =>
       onZoom(
@@ -91,8 +95,8 @@ const AnimationEditor: FC = () => {
         const minY = -anim.padding.y;
         const maxY = anim.padding.y + anim.size.height - frame.view.height;
 
-        frame.offset.x = Math.min(Math.max(minX, Math.floor(x)), maxX);
-        frame.offset.y = Math.min(Math.max(minY, Math.floor(y)), maxY);
+        frame.offset.x = Math.min(Math.max(minX, Math.round(x)), maxX);
+        frame.offset.y = Math.min(Math.max(minY, Math.round(y)), maxY);
 
         s.updateFrame({ offset: frame.offset });
 
@@ -107,6 +111,7 @@ const AnimationEditor: FC = () => {
 
   // Editing
   const dragStart = useRef<Point | undefined>();
+  const offsetStart = useRef<Point | undefined>();
 
   const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
@@ -115,7 +120,8 @@ const AnimationEditor: FC = () => {
 
       const mousePos = mouse2scaledCanvas(e, canvasRef.current, getScale(zoom));
 
-      dragStart.current = {
+      dragStart.current = mousePos;
+      offsetStart.current = {
         x: mousePos.x - anim.frames[i].offset.x,
         y: mousePos.y - anim.frames[i].offset.y,
       };
@@ -132,18 +138,33 @@ const AnimationEditor: FC = () => {
 
       setMousePos(mousePos);
 
-      if (dragStart.current) {
-        const deltaX = mousePos.x - dragStart.current.x;
-        const deltaY = mousePos.y - dragStart.current.y;
+      if (offsetStart.current && dragStart.current) {
+        let offsetX = mousePos.x - offsetStart.current.x;
+        let offsetY = mousePos.y - offsetStart.current.y;
 
-        const offsetChanged = setOffset(deltaX, deltaY);
+        // TODO 90 deg drag kinda buggy
+        if (e.shiftKey) {
+          const dX = mousePos.x - dragStart.current.x;
+          const dY = mousePos.y - dragStart.current.y;
 
-        if (!offsetChanged.left) {
-          dragStart.current.x = mousePos.x - anim.frames[i].offset.x;
+          if (Math.abs(dX - dY) > 1)
+            if (Math.abs(dX) > Math.abs(dY)) {
+              offsetY = anim.frames[i].offset.y;
+            } else {
+              offsetX = anim.frames[i].offset.x;
+            }
         }
 
-        if (!offsetChanged.top) {
-          dragStart.current.y = mousePos.y - anim.frames[i].offset.y;
+        const outOfBounds = setOffset(offsetX, offsetY);
+
+        if (!e.shiftKey) {
+          if (!outOfBounds.left) {
+            offsetStart.current.x = mousePos.x - anim.frames[i].offset.x;
+          }
+
+          if (!outOfBounds.top) {
+            offsetStart.current.y = mousePos.y - anim.frames[i].offset.y;
+          }
         }
       }
     },
@@ -151,7 +172,7 @@ const AnimationEditor: FC = () => {
   );
 
   const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(
-    () => (dragStart.current = undefined),
+    () => (offsetStart.current = dragStart.current = undefined),
     []
   );
 
