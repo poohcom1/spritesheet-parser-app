@@ -8,6 +8,11 @@ interface Point {
   y: number;
 }
 
+interface Size {
+  width: number;
+  height: number;
+}
+
 // Store data
 
 interface Sheet {
@@ -21,6 +26,7 @@ interface Frames {
   name: string;
   frames: Frame[];
   padding: Point;
+  size: Size;
 
   editor: FramesEditor;
 }

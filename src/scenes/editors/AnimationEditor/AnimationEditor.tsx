@@ -1,5 +1,12 @@
-import { getFramesSize } from "lib/blob-detection";
-import { FC, useCallback, useEffect, useMemo, useRef } from "react";
+import { mouse2canvas } from "lib/canvas";
+import {
+  FC,
+  MouseEventHandler,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { Button, ButtonGroup, FormControl, FormLabel } from "react-bootstrap";
 import {
   AiFillPauseCircle,
@@ -38,8 +45,7 @@ const AnimationEditor: FC = () => {
     [onZoom, setEditor, zoom]
   );
 
-  // Animation
-  const size = getFramesSize(animation.frames);
+  const size = animation.size;
 
   // Init
   const imageCanvas = useMemo(() => {
@@ -71,13 +77,64 @@ const AnimationEditor: FC = () => {
     useCallback(
       (s) => (x: number, y: number) => {
         const frame = animation.frames[i];
-        frame.offset.left = x;
-        frame.offset.top = y;
 
-        s.editAnimation(animation);
+        frame.offset.left = Math.min(
+          Math.max(-animation.padding.x, Math.floor(x)),
+          animation.padding.x + animation.size.width - frame.position.width
+        );
+        frame.offset.top = Math.min(
+          Math.max(-animation.padding.y, Math.floor(y)),
+          animation.padding.y + animation.size.height - frame.position.height
+        );
+
+        s.updateFrame({ offset: frame.offset });
       },
       [animation, i]
     )
+  );
+
+  // Editing
+  const dragPos = useRef<Point | undefined>();
+
+  const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback(
+    (e) => {
+      const ctx = canvasRef.current?.getContext("2d");
+      if (!ctx || !canvasRef.current) return;
+
+      dragPos.current = mouse2canvas(
+        e,
+        canvasRef.current,
+        Math.pow(1.1, zoom * 2)
+      );
+    },
+    [zoom]
+  );
+
+  const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
+    (e) => {
+      const ctx = canvasRef.current?.getContext("2d");
+      if (!ctx || !canvasRef.current) return;
+
+      if (dragPos.current) {
+        const mousePos = mouse2canvas(
+          e,
+          canvasRef.current,
+          Math.pow(1.1, zoom * 2)
+        );
+        const deltaX = mousePos.x - dragPos.current.x;
+        const deltaY = mousePos.y - dragPos.current.y;
+
+        setOffset(frame.offset.x + deltaX, frame.offset.y + deltaY);
+
+        dragPos.current = mousePos;
+      }
+    },
+    [frame.offset.x, frame.offset.y, setOffset, zoom]
+  );
+
+  const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(
+    () => (dragPos.current = undefined),
+    []
   );
 
   // Drawing
@@ -120,6 +177,9 @@ const AnimationEditor: FC = () => {
                 border: "1px solid black",
               }}
               ref={canvasRef}
+              onMouseDown={onMouseDown}
+              onMouseMove={onMouseMove}
+              onMouseUp={onMouseUp}
             />
           </div>
         }
@@ -194,13 +254,26 @@ const AnimationEditor: FC = () => {
             </PanelSection>
             <PanelSection header="Positioning">
               <p>
-                Offsets: ({frame.offset.x}, {frame.offset.y})
+                Offsets: ({frame.offset.x + animation.padding.x},{" "}
+                {frame.offset.y + animation.padding.y})
               </p>
               <DPad
                 onLeft={() => setOffset(frame.offset.x - 1, frame.offset.y)}
                 onUp={() => setOffset(frame.offset.x, frame.offset.y - 1)}
                 onRight={() => setOffset(frame.offset.x + 1, frame.offset.y)}
                 onDown={() => setOffset(frame.offset.x, frame.offset.y + 1)}
+                onUpLeft={() =>
+                  setOffset(frame.offset.x - 1, frame.offset.y - 1)
+                }
+                onUpRight={() =>
+                  setOffset(frame.offset.x + 1, frame.offset.y - 1)
+                }
+                onDownLeft={() =>
+                  setOffset(frame.offset.x - 1, frame.offset.y + 1)
+                }
+                onDownRight={() =>
+                  setOffset(frame.offset.x + 1, frame.offset.y + 1)
+                }
               />
             </PanelSection>
           </PanelContainer>

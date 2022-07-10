@@ -1,7 +1,11 @@
 import create from "zustand";
 import { combine } from "zustand/middleware";
 import { Rect } from "blob-detection-ts";
-import { alignFramesVertically, orderRects } from "lib/blob-detection";
+import {
+  alignFramesVertically,
+  getFramesSize,
+  orderRects,
+} from "lib/blob-detection";
 
 const rootState = {
   sheets: [] as Sheet[],
@@ -50,6 +54,7 @@ const rootStore = combine(rootState, (set, get) => ({
       name: name || "Animation #" + sheet.animations.length,
       frames,
       padding: { x: 5, y: 5 },
+      size: getFramesSize(frames),
 
       editor: {
         zoom: 0,
@@ -64,13 +69,28 @@ const rootStore = combine(rootState, (set, get) => ({
     return true;
   },
 
-  editAnimation(update: Partial<Frames>): boolean {
+  updateAnimation(update: Partial<Frames>): boolean {
     const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
     if (!sheet) return false;
     const anim = sheet.animations[get().selectedAnimation];
     if (!anim) return false;
 
     sheet.animations[get().selectedAnimation] = { ...anim, ...update };
+
+    set({ sheets: get().sheets });
+
+    return true;
+  },
+
+  updateFrame(update: Partial<Frame>): boolean {
+    const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
+    if (!sheet) return false;
+    const anim = sheet.animations[get().selectedAnimation];
+    if (!anim) return false;
+    const frame = anim.frames[anim.editor.frameNo];
+    if (!frame) return false;
+
+    anim.frames[anim.editor.frameNo] = { ...frame, ...update };
 
     set({ sheets: get().sheets });
 
