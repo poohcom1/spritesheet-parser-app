@@ -12,11 +12,7 @@ export function mouse2transformCanvas(
   return transformedPoint;
 }
 
-export function mouse2canvas(
-  e: MouseEvent,
-  canvas: HTMLCanvasElement,
-  scale = 1
-): Point {
+export function mouse2canvas(e: MouseEvent, canvas: HTMLCanvasElement): Point {
   const bounds = canvas.getBoundingClientRect();
 
   let x = e.clientX - bounds.left;

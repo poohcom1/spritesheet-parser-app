@@ -96,19 +96,12 @@ const AnimationEditor: FC = () => {
   // Editing
   const dragPos = useRef<Point | undefined>();
 
-  const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback(
-    (e) => {
-      const ctx = canvasRef.current?.getContext("2d");
-      if (!ctx || !canvasRef.current) return;
+  const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback((e) => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || !canvasRef.current) return;
 
-      dragPos.current = mouse2canvas(
-        e,
-        canvasRef.current,
-        Math.pow(1.1, zoom * 2)
-      );
-    },
-    [zoom]
-  );
+    dragPos.current = mouse2canvas(e, canvasRef.current);
+  }, []);
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
@@ -116,11 +109,7 @@ const AnimationEditor: FC = () => {
       if (!ctx || !canvasRef.current) return;
 
       if (dragPos.current) {
-        const mousePos = mouse2canvas(
-          e,
-          canvasRef.current,
-          Math.pow(1.1, zoom * 2)
-        );
+        const mousePos = mouse2canvas(e, canvasRef.current);
         const deltaX = mousePos.x - dragPos.current.x;
         const deltaY = mousePos.y - dragPos.current.y;
 
@@ -129,7 +118,7 @@ const AnimationEditor: FC = () => {
         dragPos.current = mousePos;
       }
     },
-    [frame.offset.x, frame.offset.y, setOffset, zoom]
+    [frame.offset.x, frame.offset.y, setOffset]
   );
 
   const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(

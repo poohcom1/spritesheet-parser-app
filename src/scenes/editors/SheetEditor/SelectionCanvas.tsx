@@ -10,12 +10,8 @@ import {
 } from "react";
 import styled from "styled-components";
 import MSER, { Rect } from "blob-detection-ts";
-import { mouse2canvas, mouse2transformCanvas } from "lib/canvas";
 import useEditorStore from "stores/editorStore";
-import {
-  TransformCanvasRenderingContext2D,
-  toTransformedContext,
-} from "canvas-transform-context";
+import { TransformContext } from "canvas-transform-context";
 
 const CanvasLayer = styled.canvas<{ z: number }>`
   position: absolute;
@@ -50,11 +46,9 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   const rectsCanvasRef = useRef<HTMLCanvasElement>(null);
   const selectCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const imageCtxRef = useRef<TransformCanvasRenderingContext2D | undefined>();
-  const rectsCtxRef = useRef<TransformCanvasRenderingContext2D | undefined>();
-  const selectCtxRef = useRef<TransformCanvasRenderingContext2D | undefined>();
-
-  const mousePosRef = useRef({ x: 0, y: 0 });
+  const imageCtxRef = useRef<TransformContext | undefined>();
+  const rectsCtxRef = useRef<TransformContext | undefined>();
+  const selectCtxRef = useRef<TransformContext | undefined>();
 
   const anchorRef = useRef<Point | undefined>();
   const [selection, setSelection] = useState<Rect>(new Rect());
@@ -66,15 +60,15 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     const s_ctx = selectCanvasRef.current?.getContext("2d");
 
     if (i_ctx && !imageCtxRef.current) {
-      imageCtxRef.current = toTransformedContext(i_ctx);
+      imageCtxRef.current = new TransformContext(i_ctx);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (i_ctx as any).webkitImageSmoothingEnabled = false;
       i_ctx.imageSmoothingEnabled = false;
     }
     if (r_ctx && !rectsCtxRef.current)
-      rectsCtxRef.current = toTransformedContext(r_ctx);
+      rectsCtxRef.current = new TransformContext(r_ctx);
     if (s_ctx && !selectCtxRef.current)
-      selectCtxRef.current = toTransformedContext(s_ctx);
+      selectCtxRef.current = new TransformContext(s_ctx);
   }, []);
 
   // Memos
@@ -101,18 +95,21 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
 
   // Draw functions
   const drawImage = useCallback(() => {
-    const ctx = imageCtxRef.current;
-    if (!ctx) return;
+    const t_ctx = imageCtxRef.current;
+    if (!t_ctx) return;
+    const ctx = t_ctx.ctx;
 
-    ctx.clearCanvas();
+    t_ctx.clearCanvas();
 
     ctx.drawImage(imageData, 0, 0);
   }, [imageData]);
 
   const drawRects = useCallback(() => {
-    const ctx = rectsCtxRef.current;
-    if (!ctx) return;
-    ctx.clearCanvas();
+    const t_ctx = rectsCtxRef.current;
+    if (!t_ctx) return;
+    const ctx = t_ctx.ctx;
+
+    t_ctx.clearCanvas();
     selectedRects.forEach((rect) => {
       ctx.fillStyle = "#ff000055";
       ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
@@ -122,8 +119,10 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
   const preSelection = useRef(new Rect());
 
   const drawSelection = useCallback(() => {
-    const ctx = selectCtxRef.current;
-    if (!ctx) return;
+    const t_ctx = selectCtxRef.current;
+    if (!t_ctx) return;
+    const ctx = t_ctx.ctx;
+
     ctx.clearRect(
       preSelection.current.x - 5,
       preSelection.current.y - 5,
@@ -142,29 +141,31 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
     []
   );
 
-  const draw = useCallback(() => {
+  const drawAll = useCallback(() => {
     drawImage();
     drawRects();
     drawSelection();
   }, [drawImage, drawRects, drawSelection]);
 
   const withContexts = useCallback(
-    (callback: (ctx: TransformCanvasRenderingContext2D) => void) => {
+    (callback: (ctx: TransformContext) => void) => {
       for (const ctx of contexts()) if (ctx) callback(ctx);
-      draw();
+      drawAll();
     },
-    [contexts, draw]
+    [contexts, drawAll]
   );
 
-  useEffect(draw, [draw]);
+  useEffect(drawAll, [drawAll]);
 
   const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
       if (e.ctrlKey || e.metaKey) {
-        withContexts((ctx) => ctx.beginPan(e.nativeEvent));
+        withContexts((ctx) => ctx.beginMousePan(e.nativeEvent));
       } else {
         if (selectCtxRef.current) {
-          const mousePos = mouse2transformCanvas(e, selectCtxRef.current);
+          const mousePos = selectCtxRef.current.mouseToTransformed(
+            e.nativeEvent
+          );
           anchorRef.current = mousePos;
 
           onSelect([]);
@@ -183,13 +184,10 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
-      if (selectCanvasRef.current)
-        mousePosRef.current = mouse2canvas(e, selectCanvasRef.current);
-
       if (!(e.ctrlKey || e.metaKey)) {
         if (selectCtxRef.current && anchorRef.current) {
           const begin = anchorRef.current;
-          const end = mouse2transformCanvas(e, selectCtxRef.current);
+          const end = selectCtxRef.current.mouseToTransformed(e.nativeEvent);
 
           const width = Math.abs(begin.x - end.x);
           const height = Math.abs(begin.y - end.y);
@@ -211,40 +209,30 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
           onSelect(intersects);
         }
       } else {
-        withContexts((ctx) => ctx.pan(e.nativeEvent));
+        withContexts((ctx) => ctx.moveMousePan(e.nativeEvent));
       }
     },
     [onSelect, rects, withContexts]
   );
 
-  const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(
-    (e) => {
-      withContexts((ctx) => ctx.endPan(e.nativeEvent));
+  const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(() => {
+    withContexts((ctx) => ctx.endMousePan());
 
-      anchorRef.current = undefined;
-      setSelection(new Rect(0, 0, 0, 0));
-      drawSelection();
-    },
-    [drawSelection, withContexts]
-  );
+    anchorRef.current = undefined;
+    setSelection(new Rect(0, 0, 0, 0));
+    drawSelection();
+  }, [drawSelection, withContexts]);
 
   const onWheel: WheelEventHandler<HTMLCanvasElement> = useCallback(
-    (e) =>
-      withContexts((ctx) =>
-        ctx.zoom(-Math.sign(e.deltaY), 1.1, mousePosRef.current)
-      ),
+    (e) => withContexts((ctx) => ctx.zoomByMouse(e.nativeEvent)),
     [withContexts]
   );
 
   useEffect(
     () =>
       onZoom(
-        () => {
-          withContexts((ctx) => ctx.zoom(1));
-        },
-        () => {
-          withContexts((ctx) => ctx.zoom(-1));
-        }
+        () => withContexts((ctx) => ctx.zoomBy(1)),
+        () => withContexts((ctx) => ctx.zoomBy(-1))
       ),
     [contexts, onZoom, withContexts]
   );
