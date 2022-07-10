@@ -86,13 +86,13 @@ const AnimationEditor: FC = () => {
         const frame = anim.frames[i];
 
         const minX = -anim.padding.x;
-        const maxX = anim.padding.x + anim.size.width - frame.position.width;
+        const maxX = anim.padding.x + anim.size.width - frame.view.width;
 
         const minY = -anim.padding.y;
-        const maxY = anim.padding.y + anim.size.height - frame.position.height;
+        const maxY = anim.padding.y + anim.size.height - frame.view.height;
 
-        frame.offset.left = Math.min(Math.max(minX, Math.floor(x)), maxX);
-        frame.offset.top = Math.min(Math.max(minY, Math.floor(y)), maxY);
+        frame.offset.x = Math.min(Math.max(minX, Math.floor(x)), maxX);
+        frame.offset.y = Math.min(Math.max(minY, Math.floor(y)), maxY);
 
         s.updateFrame({ offset: frame.offset });
 
@@ -116,8 +116,8 @@ const AnimationEditor: FC = () => {
       const mousePos = mouse2scaledCanvas(e, canvasRef.current, getScale(zoom));
 
       dragStart.current = {
-        x: mousePos.x - anim.frames[i].offset.left,
-        y: mousePos.y - anim.frames[i].offset.top,
+        x: mousePos.x - anim.frames[i].offset.x,
+        y: mousePos.y - anim.frames[i].offset.y,
       };
     },
     [anim.frames, i, zoom]
@@ -139,11 +139,11 @@ const AnimationEditor: FC = () => {
         const offsetChanged = setOffset(deltaX, deltaY);
 
         if (!offsetChanged.left) {
-          dragStart.current.x = mousePos.x - anim.frames[i].offset.left;
+          dragStart.current.x = mousePos.x - anim.frames[i].offset.x;
         }
 
         if (!offsetChanged.top) {
-          dragStart.current.y = mousePos.y - anim.frames[i].offset.top;
+          dragStart.current.y = mousePos.y - anim.frames[i].offset.y;
         }
       }
     },
@@ -166,14 +166,14 @@ const AnimationEditor: FC = () => {
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.drawImage(
         imageCanvas,
-        frame.position.x,
-        frame.position.y,
-        frame.position.width,
-        frame.position.height,
-        frame.offset.left + anim.padding.x,
-        frame.offset.top + anim.padding.y,
-        frame.position.width,
-        frame.position.height
+        frame.view.x,
+        frame.view.y,
+        frame.view.width,
+        frame.view.height,
+        frame.offset.x + anim.padding.x,
+        frame.offset.y + anim.padding.y,
+        frame.view.width,
+        frame.view.height
       );
     }
   }, [anim, frame, imageCanvas, size.height, size.width]);

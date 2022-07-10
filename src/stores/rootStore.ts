@@ -44,8 +44,8 @@ const rootStore = combine(rootState, (set, get) => ({
 
     orderRects(rects);
     const frames = rects.map((r) => ({
-      position: r,
-      offset: new Rect(0, 0, 0, 0),
+      view: r,
+      offset: { x: 0, y: 0 },
     }));
 
     alignFramesVertically(frames);

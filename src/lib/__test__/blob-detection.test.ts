@@ -56,7 +56,7 @@ describe("blob-detection", () => {
       height: number
     ): Frame {
       return {
-        position: new Rect(x, y, width, height),
+        view: new Rect(x, y, width, height),
         offset: new Rect(0, 0, 0, 0),
       };
     }

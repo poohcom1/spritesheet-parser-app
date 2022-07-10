@@ -32,8 +32,8 @@ interface Frames {
 }
 
 interface Frame {
-  position: Rect;
-  offset: Rect;
+  view: Rect;
+  offset: Point;
 }
 
 interface FramesEditor {

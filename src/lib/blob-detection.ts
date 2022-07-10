@@ -100,11 +100,11 @@ export function alignFramesVertically(frames: Frame[]) {
   let baseline = 0;
 
   for (const frame of frames) {
-    baseline = Math.max(frame.position.height, baseline);
+    baseline = Math.max(frame.view.height, baseline);
   }
 
   for (const frame of frames) {
-    frame.offset.top = baseline - frame.position.height;
+    frame.offset.y = baseline - frame.view.height;
   }
 }
 
@@ -116,8 +116,8 @@ export function getFramesSize(frames: Frame[]): {
   let height = 0;
 
   for (const frame of frames) {
-    width = Math.max(frame.offset.left + frame.position.width, width);
-    height = Math.max(frame.offset.top + frame.position.height, height);
+    width = Math.max(frame.offset.x + frame.view.width, width);
+    height = Math.max(frame.offset.y + frame.view.height, height);
   }
 
   return {
