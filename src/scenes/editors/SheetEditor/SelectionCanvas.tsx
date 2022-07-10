@@ -65,10 +65,12 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
       (i_ctx as any).webkitImageSmoothingEnabled = false;
       i_ctx.imageSmoothingEnabled = false;
     }
-    if (r_ctx && !rectsCtxRef.current)
+    if (r_ctx && !rectsCtxRef.current) {
       rectsCtxRef.current = new TransformContext(r_ctx);
-    if (s_ctx && !selectCtxRef.current)
+    }
+    if (s_ctx && !selectCtxRef.current) {
       selectCtxRef.current = new TransformContext(s_ctx);
+    }
   }, []);
 
   // Memos

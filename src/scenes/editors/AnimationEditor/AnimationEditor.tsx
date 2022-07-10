@@ -1,4 +1,4 @@
-import { mouse2canvas } from "lib/canvas";
+import { mouse2scaledCanvas } from "lib/canvas";
 import {
   FC,
   MouseEventHandler,
@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { Button, ButtonGroup, FormControl, FormLabel } from "react-bootstrap";
 import {
@@ -21,20 +22,26 @@ import useRootStore from "stores/rootStore";
 import Editor, { PanelContainer, PanelSection } from "../Editor";
 import DPad from "./DPad";
 
+function getScale(zoom: number) {
+  return Math.pow(1.1, zoom * 2);
+}
+
 const AnimationEditor: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const image = useRootStore((s) => s.getSheet()?.image)!;
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const animation = useRootStore((s) => s.getAnimation())!;
+  const anim = useRootStore((s) => s.getAnimation())!;
 
   // Editor Display
-  const fps = animation.editor.fps;
-  const zoom = animation.editor.zoom;
-  const playing = animation.editor.playing;
-  const i = animation.editor.frameNo;
+  const fps = anim.editor.fps;
+  const zoom = anim.editor.zoom;
+  const playing = anim.editor.playing;
+  const i = anim.editor.frameNo;
 
   const setEditor = useRootStore((s) => s.setAnimationEditor);
   const onZoom = useEditorStore((s) => s.onZoom);
+
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(
     () =>
@@ -45,7 +52,7 @@ const AnimationEditor: FC = () => {
     [onZoom, setEditor, zoom]
   );
 
-  const size = animation.size;
+  const size = anim.size;
 
   // Init
   const imageCanvas = useMemo(() => {
@@ -61,68 +68,90 @@ const AnimationEditor: FC = () => {
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
-        setEditor({ frameNo: i + 1 >= animation.frames.length ? 0 : i + 1 });
+        setEditor({ frameNo: i + 1 >= anim.frames.length ? 0 : i + 1 });
       }, 1000 / fps);
 
       return () => clearInterval(intervalRef.current);
     } else {
       clearInterval(intervalRef.current);
     }
-  }, [animation.frames.length, fps, i, playing, setEditor]);
+  }, [anim.frames.length, fps, i, playing, setEditor]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frame = animation.frames[i] ?? animation.frames[0];
+  const frame = anim.frames[i] ?? anim.frames[0];
 
   const setOffset = useRootStore(
     useCallback(
       (s) => (x: number, y: number) => {
-        const frame = animation.frames[i];
+        const frame = anim.frames[i];
 
-        frame.offset.left = Math.min(
-          Math.max(-animation.padding.x, Math.floor(x)),
-          animation.padding.x + animation.size.width - frame.position.width
-        );
-        frame.offset.top = Math.min(
-          Math.max(-animation.padding.y, Math.floor(y)),
-          animation.padding.y + animation.size.height - frame.position.height
-        );
+        const minX = -anim.padding.x;
+        const maxX = anim.padding.x + anim.size.width - frame.position.width;
+
+        const minY = -anim.padding.y;
+        const maxY = anim.padding.y + anim.size.height - frame.position.height;
+
+        frame.offset.left = Math.min(Math.max(minX, Math.floor(x)), maxX);
+        frame.offset.top = Math.min(Math.max(minY, Math.floor(y)), maxY);
 
         s.updateFrame({ offset: frame.offset });
+
+        return {
+          left: x >= minX && x <= maxX,
+          top: y >= minY && y <= maxY,
+        };
       },
-      [animation, i]
+      [anim, i]
     )
   );
 
   // Editing
-  const dragPos = useRef<Point | undefined>();
+  const dragStart = useRef<Point | undefined>();
 
-  const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback((e) => {
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx || !canvasRef.current) return;
+  const onMouseDown: MouseEventHandler<HTMLCanvasElement> = useCallback(
+    (e) => {
+      const ctx = canvasRef.current?.getContext("2d");
+      if (!ctx || !canvasRef.current) return;
 
-    dragPos.current = mouse2canvas(e, canvasRef.current);
-  }, []);
+      const mousePos = mouse2scaledCanvas(e, canvasRef.current, getScale(zoom));
+
+      dragStart.current = {
+        x: mousePos.x - anim.frames[i].offset.left,
+        y: mousePos.y - anim.frames[i].offset.top,
+      };
+    },
+    [anim.frames, i, zoom]
+  );
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
     (e) => {
       const ctx = canvasRef.current?.getContext("2d");
       if (!ctx || !canvasRef.current) return;
 
-      if (dragPos.current) {
-        const mousePos = mouse2canvas(e, canvasRef.current);
-        const deltaX = mousePos.x - dragPos.current.x;
-        const deltaY = mousePos.y - dragPos.current.y;
+      const mousePos = mouse2scaledCanvas(e, canvasRef.current, getScale(zoom));
 
-        setOffset(frame.offset.x + deltaX, frame.offset.y + deltaY);
+      setMousePos(mousePos);
 
-        dragPos.current = mousePos;
+      if (dragStart.current) {
+        const deltaX = mousePos.x - dragStart.current.x;
+        const deltaY = mousePos.y - dragStart.current.y;
+
+        const offsetChanged = setOffset(deltaX, deltaY);
+
+        if (!offsetChanged.left) {
+          dragStart.current.x = mousePos.x - anim.frames[i].offset.left;
+        }
+
+        if (!offsetChanged.top) {
+          dragStart.current.y = mousePos.y - anim.frames[i].offset.top;
+        }
       }
     },
-    [frame.offset.x, frame.offset.y, setOffset]
+    [anim.frames, i, setOffset, zoom]
   );
 
   const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(
-    () => (dragPos.current = undefined),
+    () => (dragStart.current = undefined),
     []
   );
 
@@ -131,8 +160,8 @@ const AnimationEditor: FC = () => {
     const ctx = canvasRef.current?.getContext("2d");
 
     if (ctx) {
-      ctx.canvas.width = size.width + animation.padding.x * 2;
-      ctx.canvas.height = size.height + animation.padding.y * 2;
+      ctx.canvas.width = size.width + anim.padding.x * 2;
+      ctx.canvas.height = size.height + anim.padding.y * 2;
 
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.drawImage(
@@ -141,13 +170,13 @@ const AnimationEditor: FC = () => {
         frame.position.y,
         frame.position.width,
         frame.position.height,
-        frame.offset.left + animation.padding.x,
-        frame.offset.top + animation.padding.y,
+        frame.offset.left + anim.padding.x,
+        frame.offset.top + anim.padding.y,
         frame.position.width,
         frame.position.height
       );
     }
-  }, [animation, frame, imageCanvas, size.height, size.width]);
+  }, [anim, frame, imageCanvas, size.height, size.width]);
 
   return (
     <>
@@ -160,7 +189,7 @@ const AnimationEditor: FC = () => {
           >
             <canvas
               style={{
-                transform: `scale(${Math.pow(1.1, zoom * 2)})`,
+                transform: `scale(${getScale(zoom)})`,
                 flexGrow: "0",
                 flexShrink: "0",
                 border: "1px solid black",
@@ -169,6 +198,7 @@ const AnimationEditor: FC = () => {
               onMouseDown={onMouseDown}
               onMouseMove={onMouseMove}
               onMouseUp={onMouseUp}
+              onMouseLeave={onMouseUp}
             />
           </div>
         }
@@ -182,10 +212,9 @@ const AnimationEditor: FC = () => {
                     onClick={useCallback(
                       () =>
                         setEditor({
-                          frameNo:
-                            i - 1 >= 0 ? i - 1 : animation.frames.length - 1,
+                          frameNo: i - 1 >= 0 ? i - 1 : anim.frames.length - 1,
                         }),
-                      [animation.frames.length, i, setEditor]
+                      [anim.frames.length, i, setEditor]
                     )}
                   >
                     <AiFillStepBackward size={25} />
@@ -205,9 +234,9 @@ const AnimationEditor: FC = () => {
                     onClick={useCallback(
                       () =>
                         setEditor({
-                          frameNo: i + 1 < animation.frames.length ? i + 1 : 0,
+                          frameNo: i + 1 < anim.frames.length ? i + 1 : 0,
                         }),
-                      [animation.frames.length, i, setEditor]
+                      [anim.frames.length, i, setEditor]
                     )}
                   >
                     <AiFillStepForward size={25} />
@@ -243,8 +272,12 @@ const AnimationEditor: FC = () => {
             </PanelSection>
             <PanelSection header="Positioning">
               <p>
-                Offsets: ({frame.offset.x + animation.padding.x},{" "}
-                {frame.offset.y + animation.padding.y})
+                Mouse: ({Math.floor(mousePos.x) - 1},{" "}
+                {Math.floor(mousePos.y) - 1})
+              </p>
+              <p>
+                Offsets: ({frame.offset.x + anim.padding.x},{" "}
+                {frame.offset.y + anim.padding.y})
               </p>
               <DPad
                 onLeft={() => setOffset(frame.offset.x - 1, frame.offset.y)}

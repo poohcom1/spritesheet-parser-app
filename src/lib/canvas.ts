@@ -1,16 +1,4 @@
-import { TransformCanvasRenderingContext2D } from "canvas-transform-context";
 import { MouseEvent } from "react";
-
-export function mouse2transformCanvas(
-  e: MouseEvent,
-  ctx: TransformCanvasRenderingContext2D
-): Point {
-  const point = mouse2canvas(e, ctx.canvas);
-
-  const transformedPoint = ctx.transformedPoint(point.x, point.y);
-
-  return transformedPoint;
-}
 
 export function mouse2canvas(e: MouseEvent, canvas: HTMLCanvasElement): Point {
   const bounds = canvas.getBoundingClientRect();
@@ -33,7 +21,21 @@ export function mouse2canvas(e: MouseEvent, canvas: HTMLCanvasElement): Point {
   }
 
   return {
-    x: (x * canvas.width) / canvas.clientWidth,
-    y: (y * canvas.height) / canvas.clientHeight,
+    x,
+    y,
   };
+}
+
+export function mouse2scaledCanvas(
+  e: MouseEvent,
+  canvas: HTMLCanvasElement,
+  scale: number
+) {
+  const mousePos = mouse2canvas(e, canvas);
+
+  const transform = new DOMMatrix().scale(scale, scale);
+
+  return new DOMPoint(mousePos.x, mousePos.y).matrixTransform(
+    transform.inverse()
+  );
 }
