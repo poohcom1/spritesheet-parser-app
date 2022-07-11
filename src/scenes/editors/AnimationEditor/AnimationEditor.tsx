@@ -52,7 +52,7 @@ const AnimationEditor: FC = () => {
   );
 
   // Shortcuts
-  const ctrlKey = useKeyPressed("Control", togglePlaying);
+  const ctrlKey = useKeyPressed("Control");
 
   useKeyPressed(" ", togglePlaying);
 
@@ -63,13 +63,12 @@ const AnimationEditor: FC = () => {
     setEditor({ frameNo: wrapi(i + 1, anim.frames.length) })
   );
 
-  const upKey = useKeyPressed("ArrowUp");
-  const downKey = useKeyPressed("ArrowDown");
-  const leftKey = useKeyPressed("ArrowLeft");
-  const rightKey = useKeyPressed("ArrowRight");
+  useKeyPressed("ArrowUp", () => setOffset(0, -1), true);
+  useKeyPressed("ArrowDown", () => setOffset(0, 1), true);
+  useKeyPressed("ArrowLeft", () => setOffset(-1, 0), true);
+  useKeyPressed("ArrowRight", () => setOffset(1, 0), true);
 
   // Action var
-  const [showAll, setShowAll] = useState(false);
   const [onionSkin, setOnionSkin] = useState<number[]>([]);
 
   // Zoom
@@ -114,34 +113,19 @@ const AnimationEditor: FC = () => {
 
   const setOffset = useRootStore(
     useCallback(
-      (s) => (x: number, y: number) => {
+      (s) => (dx: number, dy: number) => {
+        setEditor({ playing: false });
+
         const frame = anim.frames[i];
 
-        // const minX = -anim.padding.x;
-        // const maxX = anim.padding.x + anim.size.width - frame.view.width;
-
-        // const minY = -anim.padding.y;
-        // const maxY = anim.padding.y + anim.size.height - frame.view.height;
-
-        const preOffsetX = frame.offset.x;
-        const preOffsetY = frame.offset.y;
-
-        // frame.offset.x = Math.min(Math.max(minX, Math.round(x)), maxX);
-        // frame.offset.y = Math.min(Math.max(minY, Math.round(y)), maxY);
-
-        const overflowing = setFrameOffset({ x, y }, anim, i);
+        const overflowing = setFrameOffset(dx, dy, anim, i);
 
         if (ctrlKey) {
-          const deltaX = frame.offset.x - preOffsetX;
-          const deltaY = frame.offset.y - preOffsetY;
-
+          // Move all
           for (let j = 0; j < anim.frames.length; j++) {
             if (i === j) continue;
 
-            const offsetX = deltaX + anim.frames[j].offset.x;
-            const offsetY = deltaY + anim.frames[j].offset.y;
-
-            setFrameOffset({ x: offsetX, y: offsetY }, anim, j);
+            setFrameOffset(dx, dy, anim, j);
             s.updateAnimation(anim);
           }
         } else {
@@ -153,7 +137,7 @@ const AnimationEditor: FC = () => {
           top: overflowing.y,
         };
       },
-      [anim, ctrlKey, i]
+      [anim, ctrlKey, i, setEditor]
     )
   );
 
@@ -199,13 +183,16 @@ const AnimationEditor: FC = () => {
 
           if (Math.abs(dX - dY) > 1)
             if (Math.abs(dX) > Math.abs(dY)) {
-              offsetY = anim.frames[i].offset.y;
+              offsetY = 0;
             } else {
-              offsetX = anim.frames[i].offset.x;
+              offsetX = 0;
             }
         }
 
-        const outOfBounds = setOffset(offsetX, offsetY);
+        const outOfBounds = setOffset(
+          offsetX - anim.frames[i].offset.x,
+          offsetY - anim.frames[i].offset.y
+        );
 
         if (!e.shiftKey) {
           if (!outOfBounds.left) {
@@ -266,7 +253,7 @@ const AnimationEditor: FC = () => {
         frame.view.height
       );
     }
-  }, [anim, ctrlKey, frame, imageCanvas, showAll, size.height, size.width]);
+  }, [anim, ctrlKey, frame, imageCanvas, size.height, size.width]);
 
   return (
     <>
@@ -313,6 +300,7 @@ const AnimationEditor: FC = () => {
                   <Button
                     className="d-flex justify-content-center align-items-center"
                     onClick={togglePlaying}
+                    onKeyDown={(e) => e.key === " " && e.preventDefault()}
                   >
                     {playing ? (
                       <AiFillPauseCircle size={25} />
@@ -373,22 +361,14 @@ const AnimationEditor: FC = () => {
                 {frame.offset.y + anim.padding.y})
               </p>
               <DPad
-                onLeft={() => setOffset(frame.offset.x - 1, frame.offset.y)}
-                onUp={() => setOffset(frame.offset.x, frame.offset.y - 1)}
-                onRight={() => setOffset(frame.offset.x + 1, frame.offset.y)}
-                onDown={() => setOffset(frame.offset.x, frame.offset.y + 1)}
-                onUpLeft={() =>
-                  setOffset(frame.offset.x - 1, frame.offset.y - 1)
-                }
-                onUpRight={() =>
-                  setOffset(frame.offset.x + 1, frame.offset.y - 1)
-                }
-                onDownLeft={() =>
-                  setOffset(frame.offset.x - 1, frame.offset.y + 1)
-                }
-                onDownRight={() =>
-                  setOffset(frame.offset.x + 1, frame.offset.y + 1)
-                }
+                onLeft={() => setOffset(-1, 0)}
+                onUp={() => setOffset(0, -1)}
+                onRight={() => setOffset(+1, 0)}
+                onDown={() => setOffset(0, +1)}
+                onUpLeft={() => setOffset(-1, -1)}
+                onUpRight={() => setOffset(+1, -1)}
+                onDownLeft={() => setOffset(-1, +1)}
+                onDownRight={() => setOffset(+1, +1)}
               />
             </PanelSection>
           </PanelContainer>

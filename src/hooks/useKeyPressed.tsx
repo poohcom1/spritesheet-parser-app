@@ -10,7 +10,8 @@ type Callback = () => any;
  */
 export default function useKeyPressed(
   targetKey: string,
-  onKeyPress: Callback = () => undefined
+  onKeyPress: Callback = () => undefined,
+  allowRepeat = false
 ): boolean {
   const [keyPressed, setKeyPressed] = useState(false);
 
@@ -22,12 +23,12 @@ export default function useKeyPressed(
 
   const downHandler = useCallback(
     ({ key, repeat }: KeyboardEvent) => {
-      if (key === targetKey && !repeat) {
+      if (key === targetKey && (!repeat || allowRepeat)) {
         callbackRef.current();
         setKeyPressed(true);
       }
     },
-    [targetKey]
+    [allowRepeat, targetKey]
   );
   const upHandler = useCallback(
     ({ key }: KeyboardEvent): void => {
