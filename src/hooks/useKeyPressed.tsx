@@ -11,6 +11,7 @@ type Callback = () => any;
 export default function useKeyPressed(
   targetKey: string,
   onKeyPress: Callback = () => undefined,
+
   allowRepeat = false
 ): boolean {
   const [keyPressed, setKeyPressed] = useState(false);

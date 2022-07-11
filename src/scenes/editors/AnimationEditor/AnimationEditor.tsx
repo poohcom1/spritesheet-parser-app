@@ -4,6 +4,7 @@ import { mouse2scaledCanvas } from "lib/canvas";
 import { wrapi } from "lib/math";
 import {
   FC,
+  KeyboardEventHandler,
   MouseEventHandler,
   useCallback,
   useEffect,
@@ -11,7 +12,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { Button, ButtonGroup, FormControl, FormLabel } from "react-bootstrap";
+import {
+  Button,
+  ButtonGroup,
+  FormCheck,
+  FormControl,
+  FormLabel,
+} from "react-bootstrap";
 import {
   AiFillPauseCircle,
   AiFillPlayCircle,
@@ -29,6 +36,22 @@ function getScale(zoom: number) {
   return Math.pow(1.1, zoom * 2);
 }
 
+function inRange(current: number, from: number, to: number, max: number) {
+  const start = (from + max) % max;
+  const end = to % max;
+
+  if (start > end) {
+    return (
+      (current >= start && current < max) || (current >= 0 && current <= end)
+    );
+  } else {
+    return current >= start && current <= end;
+  }
+}
+
+const overrideKey: KeyboardEventHandler = (e) =>
+  [" "].includes(e.key) && e.preventDefault();
+
 const AnimationEditor: FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const image = useRootStore((s) => s.getSheet()?.image)!;
@@ -39,12 +62,10 @@ const AnimationEditor: FC = () => {
   const fps = anim.editor.fps;
   const zoom = anim.editor.zoom;
   const playing = anim.editor.playing;
-  const i = anim.editor.frameNo;
+  const no = anim.editor.frameNo;
 
   const setEditor = useRootStore((s) => s.setAnimationEditor);
   const onZoom = useEditorStore((s) => s.onZoom);
-
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const togglePlaying = useCallback(
     () => setEditor({ playing: !playing }),
@@ -53,14 +74,15 @@ const AnimationEditor: FC = () => {
 
   // Shortcuts
   const ctrlKey = useKeyPressed("Control");
+  const shiftKey = useKeyPressed("Shift");
 
   useKeyPressed(" ", togglePlaying);
 
   useKeyPressed("a", () =>
-    setEditor({ frameNo: wrapi(i - 1, anim.frames.length) })
+    setEditor({ frameNo: wrapi(no - 1, 0, anim.frames.length) })
   );
   useKeyPressed("d", () =>
-    setEditor({ frameNo: wrapi(i + 1, anim.frames.length) })
+    setEditor({ frameNo: wrapi(no + 1, 0, anim.frames.length) })
   );
 
   useKeyPressed("ArrowUp", () => setOffset(0, -1), true);
@@ -69,7 +91,8 @@ const AnimationEditor: FC = () => {
   useKeyPressed("ArrowRight", () => setOffset(1, 0), true);
 
   // Action var
-  const [onionSkin, setOnionSkin] = useState<number[]>([]);
+  const [showOnionSkin, setShowOnionSkin] = useState(false);
+  const [onionSkin, setOnionSkin] = useState({ left: -1, right: 0 });
 
   // Zoom
   useEffect(
@@ -98,7 +121,7 @@ const AnimationEditor: FC = () => {
     if (playing) {
       intervalRef.current = setInterval(() => {
         setEditor({
-          frameNo: (i + 1) % anim.frames.length,
+          frameNo: (no + 1) % anim.frames.length,
         });
       }, 1000 / fps);
 
@@ -106,24 +129,24 @@ const AnimationEditor: FC = () => {
     } else {
       clearInterval(intervalRef.current);
     }
-  }, [anim.frames.length, fps, i, playing, setEditor]);
+  }, [anim.frames.length, fps, no, playing, setEditor]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frame = anim.frames[i] ?? anim.frames[0];
+  const frame = anim.frames[no] ?? anim.frames[0];
 
   const setOffset = useRootStore(
     useCallback(
       (s) => (dx: number, dy: number) => {
         setEditor({ playing: false });
 
-        const frame = anim.frames[i];
+        const frame = anim.frames[no];
 
-        const overflowing = setFrameOffset(dx, dy, anim, i);
+        const overflowing = setFrameOffset(dx, dy, anim, no);
 
         if (ctrlKey) {
           // Move all
           for (let j = 0; j < anim.frames.length; j++) {
-            if (i === j) continue;
+            if (no === j) continue;
 
             setFrameOffset(dx, dy, anim, j);
             s.updateAnimation(anim);
@@ -137,7 +160,7 @@ const AnimationEditor: FC = () => {
           top: overflowing.y,
         };
       },
-      [anim, ctrlKey, i, setEditor]
+      [anim, ctrlKey, no, setEditor]
     )
   );
 
@@ -154,13 +177,13 @@ const AnimationEditor: FC = () => {
 
       dragStart.current = mousePos;
       offsetStart.current = {
-        x: mousePos.x - anim.frames[i].offset.x,
-        y: mousePos.y - anim.frames[i].offset.y,
+        x: mousePos.x - anim.frames[no].offset.x,
+        y: mousePos.y - anim.frames[no].offset.y,
       };
 
       setEditor({ playing: false });
     },
-    [anim.frames, i, setEditor, zoom]
+    [anim.frames, no, setEditor, zoom]
   );
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
@@ -169,8 +192,6 @@ const AnimationEditor: FC = () => {
       if (!ctx || !canvasRef.current) return;
 
       const mousePos = mouse2scaledCanvas(e, canvasRef.current, getScale(zoom));
-
-      setMousePos(mousePos);
 
       if (offsetStart.current && dragStart.current) {
         let offsetX = mousePos.x - offsetStart.current.x;
@@ -190,22 +211,22 @@ const AnimationEditor: FC = () => {
         }
 
         const outOfBounds = setOffset(
-          offsetX - anim.frames[i].offset.x,
-          offsetY - anim.frames[i].offset.y
+          offsetX - anim.frames[no].offset.x,
+          offsetY - anim.frames[no].offset.y
         );
 
         if (!e.shiftKey) {
           if (!outOfBounds.left) {
-            offsetStart.current.x = mousePos.x - anim.frames[i].offset.x;
+            offsetStart.current.x = mousePos.x - anim.frames[no].offset.x;
           }
 
           if (!outOfBounds.top) {
-            offsetStart.current.y = mousePos.y - anim.frames[i].offset.y;
+            offsetStart.current.y = mousePos.y - anim.frames[no].offset.y;
           }
         }
       }
     },
-    [anim.frames, i, setOffset, zoom]
+    [anim.frames, no, setOffset, zoom]
   );
 
   const onMouseUp: MouseEventHandler<HTMLCanvasElement> = useCallback(
@@ -218,14 +239,8 @@ const AnimationEditor: FC = () => {
     const ctx = canvasRef.current?.getContext("2d");
 
     if (ctx) {
-      ctx.canvas.width = size.width + anim.padding.x * 2;
-      ctx.canvas.height = size.height + anim.padding.y * 2;
-
-      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-      if (ctrlKey) {
-        ctx.globalAlpha = 0.2;
-        for (const f of anim.frames) {
+      function drawFrame(f: Frame) {
+        ctx &&
           ctx.drawImage(
             imageCanvas,
             f.view.x,
@@ -237,23 +252,54 @@ const AnimationEditor: FC = () => {
             f.view.width,
             f.view.height
           );
+      }
+
+      ctx.canvas.width = size.width + anim.padding.x * 2;
+      ctx.canvas.height = size.height + anim.padding.y * 2;
+
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+      // Draw all
+      if (ctrlKey) {
+        ctx.globalAlpha = 0.2;
+        for (const f of anim.frames) {
+          drawFrame(f);
         }
       }
 
+      // Draw current
       ctx.globalAlpha = 1.0;
-      ctx.drawImage(
-        imageCanvas,
-        frame.view.x,
-        frame.view.y,
-        frame.view.width,
-        frame.view.height,
-        frame.offset.x + anim.padding.x,
-        frame.offset.y + anim.padding.y,
-        frame.view.width,
-        frame.view.height
-      );
+      drawFrame(frame);
+
+      if ((showOnionSkin || shiftKey) && !ctrlKey) {
+        ctx.globalAlpha = 0.2;
+        for (let i = 0; i < anim.frames.length; i++) {
+          if (
+            inRange(
+              i,
+              no + onionSkin.left,
+              no + onionSkin.right,
+              anim.frames.length
+            )
+          ) {
+            drawFrame(anim.frames[i]);
+          }
+        }
+      }
     }
-  }, [anim, ctrlKey, frame, imageCanvas, size.height, size.width]);
+  }, [
+    anim,
+    ctrlKey,
+    frame,
+    imageCanvas,
+    no,
+    onionSkin.left,
+    onionSkin.right,
+    showOnionSkin,
+    size.height,
+    size.width,
+    shiftKey,
+  ]);
 
   return (
     <>
@@ -290,9 +336,9 @@ const AnimationEditor: FC = () => {
                     onClick={useCallback(
                       () =>
                         setEditor({
-                          frameNo: wrapi(i - 1, anim.frames.length),
+                          frameNo: wrapi(no - 1, 0, anim.frames.length),
                         }),
-                      [anim.frames.length, i, setEditor]
+                      [anim.frames.length, no, setEditor]
                     )}
                   >
                     <AiFillStepBackward size={25} />
@@ -300,7 +346,7 @@ const AnimationEditor: FC = () => {
                   <Button
                     className="d-flex justify-content-center align-items-center"
                     onClick={togglePlaying}
-                    onKeyDown={(e) => e.key === " " && e.preventDefault()}
+                    onKeyDown={overrideKey}
                   >
                     {playing ? (
                       <AiFillPauseCircle size={25} />
@@ -313,9 +359,9 @@ const AnimationEditor: FC = () => {
                     onClick={useCallback(
                       () =>
                         setEditor({
-                          frameNo: wrapi(i + 1, anim.frames.length),
+                          frameNo: wrapi(no + 1, 0, anim.frames.length),
                         }),
-                      [anim.frames.length, i, setEditor]
+                      [anim.frames.length, no, setEditor]
                     )}
                   >
                     <AiFillStepForward size={25} />
@@ -348,28 +394,65 @@ const AnimationEditor: FC = () => {
                 </Button>
               </ButtonGroup>
               <p>
-                Frame: {i} / {anim.frames.length - 1}
+                Frame: {no + 1} / {anim.frames.length}
               </p>
             </PanelSection>
             <PanelSection header="Positioning">
-              <p>
+              {/* <p>
                 Mouse: ({Math.floor(mousePos.x) - 1},{" "}
                 {Math.floor(mousePos.y) - 1})
-              </p>
+              </p> */}
               <p>
                 Offsets: ({frame.offset.x + anim.padding.x},{" "}
                 {frame.offset.y + anim.padding.y})
               </p>
-              <DPad
-                onLeft={() => setOffset(-1, 0)}
-                onUp={() => setOffset(0, -1)}
-                onRight={() => setOffset(+1, 0)}
-                onDown={() => setOffset(0, +1)}
-                onUpLeft={() => setOffset(-1, -1)}
-                onUpRight={() => setOffset(+1, -1)}
-                onDownLeft={() => setOffset(-1, +1)}
-                onDownRight={() => setOffset(+1, +1)}
+              <div className="d-flex justify-content-center w-100">
+                <DPad
+                  onLeft={() => setOffset(-1, 0)}
+                  onUp={() => setOffset(0, -1)}
+                  onRight={() => setOffset(+1, 0)}
+                  onDown={() => setOffset(0, +1)}
+                  onUpLeft={() => setOffset(-1, -1)}
+                  onUpRight={() => setOffset(+1, -1)}
+                  onDownLeft={() => setOffset(-1, +1)}
+                  onDownRight={() => setOffset(+1, +1)}
+                />
+              </div>
+              <FormCheck
+                label="Onion skin"
+                id="onionSkinCheck"
+                value={showOnionSkin ? 1 : 0}
+                onChange={() => setShowOnionSkin(!showOnionSkin)}
+                onKeyDown={overrideKey}
               />
+              <div className="d-flex">
+                <FormLabel>Left:</FormLabel>
+                <FormControl
+                  type="number"
+                  value={onionSkin.left}
+                  onChange={(e) =>
+                    setOnionSkin({
+                      left: parseInt(e.target.value),
+                      right: onionSkin.right,
+                    })
+                  }
+                  min={-Math.ceil((anim.frames.length - 1) / 2)}
+                  max={0}
+                />
+                <FormLabel>Right:</FormLabel>
+                <FormControl
+                  type="number"
+                  value={onionSkin.right}
+                  onChange={(e) =>
+                    setOnionSkin({
+                      left: onionSkin.left,
+                      right: parseInt(e.target.value),
+                    })
+                  }
+                  min={0}
+                  max={Math.ceil(anim.frames.length / 2) - 1}
+                />
+              </div>
             </PanelSection>
           </PanelContainer>
         }
