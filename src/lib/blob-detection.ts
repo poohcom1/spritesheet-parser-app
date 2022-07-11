@@ -125,3 +125,28 @@ export function getFramesSize(frames: Frame[]): {
     height,
   };
 }
+
+/**
+ *
+ * @param offsets
+ * @param anim
+ * @param frameNo
+ * @returns Overflow on each axis
+ */
+export function setFrameOffset({ x, y }: Point, anim: Frames, frameNo: number) {
+  const frame = anim.frames[frameNo];
+
+  const minX = -anim.padding.x;
+  const maxX = anim.padding.x + anim.size.width - frame.view.width;
+
+  const minY = -anim.padding.y;
+  const maxY = anim.padding.y + anim.size.height - frame.view.height;
+
+  frame.offset.x = Math.min(Math.max(minX, Math.round(x)), maxX);
+  frame.offset.y = Math.min(Math.max(minY, Math.round(y)), maxY);
+
+  return {
+    x: x >= minX && x <= maxX,
+    y: y >= minY && y <= maxY,
+  };
+}

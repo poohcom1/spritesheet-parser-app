@@ -1,4 +1,7 @@
+import useKeyPressed from "hooks/useKeyPressed";
+import { setFrameOffset } from "lib/blob-detection";
 import { mouse2scaledCanvas } from "lib/canvas";
+import { wrapi } from "lib/math";
 import {
   FC,
   MouseEventHandler,
@@ -43,8 +46,31 @@ const AnimationEditor: FC = () => {
 
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
+  const togglePlaying = useCallback(
+    () => setEditor({ playing: !playing }),
+    [playing, setEditor]
+  );
+
+  // Shortcuts
+  const ctrlKey = useKeyPressed("Control", togglePlaying);
+
+  useKeyPressed(" ", togglePlaying);
+
+  useKeyPressed("a", () =>
+    setEditor({ frameNo: wrapi(i - 1, anim.frames.length) })
+  );
+  useKeyPressed("d", () =>
+    setEditor({ frameNo: wrapi(i + 1, anim.frames.length) })
+  );
+
+  const upKey = useKeyPressed("ArrowUp");
+  const downKey = useKeyPressed("ArrowDown");
+  const leftKey = useKeyPressed("ArrowLeft");
+  const rightKey = useKeyPressed("ArrowRight");
+
   // Action var
-  const shiftDirection = useRef<"" | "x" | "y">("");
+  const [showAll, setShowAll] = useState(false);
+  const [onionSkin, setOnionSkin] = useState<number[]>([]);
 
   // Zoom
   useEffect(
@@ -72,7 +98,9 @@ const AnimationEditor: FC = () => {
   useEffect(() => {
     if (playing) {
       intervalRef.current = setInterval(() => {
-        setEditor({ frameNo: i + 1 >= anim.frames.length ? 0 : i + 1 });
+        setEditor({
+          frameNo: (i + 1) % anim.frames.length,
+        });
       }, 1000 / fps);
 
       return () => clearInterval(intervalRef.current);
@@ -89,23 +117,43 @@ const AnimationEditor: FC = () => {
       (s) => (x: number, y: number) => {
         const frame = anim.frames[i];
 
-        const minX = -anim.padding.x;
-        const maxX = anim.padding.x + anim.size.width - frame.view.width;
+        // const minX = -anim.padding.x;
+        // const maxX = anim.padding.x + anim.size.width - frame.view.width;
 
-        const minY = -anim.padding.y;
-        const maxY = anim.padding.y + anim.size.height - frame.view.height;
+        // const minY = -anim.padding.y;
+        // const maxY = anim.padding.y + anim.size.height - frame.view.height;
 
-        frame.offset.x = Math.min(Math.max(minX, Math.round(x)), maxX);
-        frame.offset.y = Math.min(Math.max(minY, Math.round(y)), maxY);
+        const preOffsetX = frame.offset.x;
+        const preOffsetY = frame.offset.y;
 
-        s.updateFrame({ offset: frame.offset });
+        // frame.offset.x = Math.min(Math.max(minX, Math.round(x)), maxX);
+        // frame.offset.y = Math.min(Math.max(minY, Math.round(y)), maxY);
+
+        const overflowing = setFrameOffset({ x, y }, anim, i);
+
+        if (ctrlKey) {
+          const deltaX = frame.offset.x - preOffsetX;
+          const deltaY = frame.offset.y - preOffsetY;
+
+          for (let j = 0; j < anim.frames.length; j++) {
+            if (i === j) continue;
+
+            const offsetX = deltaX + anim.frames[j].offset.x;
+            const offsetY = deltaY + anim.frames[j].offset.y;
+
+            setFrameOffset({ x: offsetX, y: offsetY }, anim, j);
+            s.updateAnimation(anim);
+          }
+        } else {
+          s.updateFrame({ offset: frame.offset });
+        }
 
         return {
-          left: x >= minX && x <= maxX,
-          top: y >= minY && y <= maxY,
+          left: overflowing.x,
+          top: overflowing.y,
         };
       },
-      [anim, i]
+      [anim, ctrlKey, i]
     )
   );
 
@@ -125,8 +173,10 @@ const AnimationEditor: FC = () => {
         x: mousePos.x - anim.frames[i].offset.x,
         y: mousePos.y - anim.frames[i].offset.y,
       };
+
+      setEditor({ playing: false });
     },
-    [anim.frames, i, zoom]
+    [anim.frames, i, setEditor, zoom]
   );
 
   const onMouseMove: MouseEventHandler<HTMLCanvasElement> = useCallback(
@@ -176,7 +226,7 @@ const AnimationEditor: FC = () => {
     []
   );
 
-  // Drawing
+  // Draw
   useEffect(() => {
     const ctx = canvasRef.current?.getContext("2d");
 
@@ -185,6 +235,25 @@ const AnimationEditor: FC = () => {
       ctx.canvas.height = size.height + anim.padding.y * 2;
 
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+      if (ctrlKey) {
+        ctx.globalAlpha = 0.2;
+        for (const f of anim.frames) {
+          ctx.drawImage(
+            imageCanvas,
+            f.view.x,
+            f.view.y,
+            f.view.width,
+            f.view.height,
+            f.offset.x + anim.padding.x,
+            f.offset.y + anim.padding.y,
+            f.view.width,
+            f.view.height
+          );
+        }
+      }
+
+      ctx.globalAlpha = 1.0;
       ctx.drawImage(
         imageCanvas,
         frame.view.x,
@@ -197,7 +266,7 @@ const AnimationEditor: FC = () => {
         frame.view.height
       );
     }
-  }, [anim, frame, imageCanvas, size.height, size.width]);
+  }, [anim, ctrlKey, frame, imageCanvas, showAll, size.height, size.width]);
 
   return (
     <>
@@ -214,6 +283,7 @@ const AnimationEditor: FC = () => {
                 flexGrow: "0",
                 flexShrink: "0",
                 border: "1px solid black",
+                zIndex: 1,
               }}
               ref={canvasRef}
               onMouseDown={onMouseDown}
@@ -233,7 +303,7 @@ const AnimationEditor: FC = () => {
                     onClick={useCallback(
                       () =>
                         setEditor({
-                          frameNo: i - 1 >= 0 ? i - 1 : anim.frames.length - 1,
+                          frameNo: wrapi(i - 1, anim.frames.length),
                         }),
                       [anim.frames.length, i, setEditor]
                     )}
@@ -242,7 +312,7 @@ const AnimationEditor: FC = () => {
                   </Button>
                   <Button
                     className="d-flex justify-content-center align-items-center"
-                    onClick={() => setEditor({ playing: !playing })}
+                    onClick={togglePlaying}
                   >
                     {playing ? (
                       <AiFillPauseCircle size={25} />
@@ -255,7 +325,7 @@ const AnimationEditor: FC = () => {
                     onClick={useCallback(
                       () =>
                         setEditor({
-                          frameNo: i + 1 < anim.frames.length ? i + 1 : 0,
+                          frameNo: wrapi(i + 1, anim.frames.length),
                         }),
                       [anim.frames.length, i, setEditor]
                     )}
@@ -289,7 +359,9 @@ const AnimationEditor: FC = () => {
                   <AiOutlinePlus />
                 </Button>
               </ButtonGroup>
-              <p>Frame: {i}</p>
+              <p>
+                Frame: {i} / {anim.frames.length - 1}
+              </p>
             </PanelSection>
             <PanelSection header="Positioning">
               <p>

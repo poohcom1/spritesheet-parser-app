@@ -49,71 +49,57 @@ describe("blob-detection", () => {
   });
 
   describe(alignFramesVertically.name, () => {
-    function create_frame(
-      x: number,
-      y: number,
-      width: number,
-      height: number
-    ): Frame {
-      return {
-        view: new Rect(x, y, width, height),
-        offset: new Rect(0, 0, 0, 0),
-      };
-    }
-
-    function create_pos_rect(x1: number, y1: number, x2: number, y2: number) {
-      return new Rect(x1, y1, x2 - x1, y2 - y1);
-    }
+    const frame = (x: number, y: number, width: number, height: number) => ({
+      view: new Rect(x, y, width, height),
+      offset: { x: 0, y: 0 },
+    });
+    const point = (x: number, y: number) => ({ x, y });
 
     it("should align frames on a single row", () => {
       const frames = [
-        create_frame(0, 0, 0, 20),
-        create_frame(0, 0, 0, 15),
-        create_frame(0, 0, 0, 10),
-        create_frame(0, 0, 0, 5),
+        frame(0, 0, 0, 20),
+        frame(0, 0, 0, 15),
+        frame(0, 0, 0, 10),
+        frame(0, 0, 0, 5),
       ];
 
       alignFramesVertically(frames);
 
       expect(frames.map((f) => f.offset)).toStrictEqual([
-        create_pos_rect(0, 0, 0, 0),
-        create_pos_rect(0, 5, 0, 0),
-        create_pos_rect(0, 10, 0, 0),
-        create_pos_rect(0, 15, 0, 0),
+        point(0, 0),
+        point(0, 5),
+        point(0, 10),
+        point(0, 15),
       ]);
     });
 
     it("should align frames to the greatest height", () => {
-      const frames = [
-        create_frame(0, 0, 0, 5),
-        create_frame(0, 0, 0, 10),
-        create_frame(0, 0, 0, 7),
-      ];
+      const frames = [frame(0, 0, 0, 5), frame(0, 0, 0, 10), frame(0, 0, 0, 7)];
 
       alignFramesVertically(frames);
 
       expect(frames.map((f) => f.offset)).toStrictEqual([
-        create_pos_rect(0, 5, 0, 0),
-        create_pos_rect(0, 0, 0, 0),
-        create_pos_rect(0, 3, 0, 0),
+        point(0, 5),
+        point(0, 0),
+        point(0, 3),
       ]);
     });
 
     it("should align frames on two rows", () => {
       const frames = [
-        create_frame(0, 0, 0, 10),
-        create_frame(0, 0, 0, 5),
-        create_frame(0, 50, 0, 10),
-        create_frame(0, 50, 0, 5),
+        frame(0, 0, 0, 10),
+        frame(0, 0, 0, 5),
+        frame(0, 50, 0, 10),
+        frame(0, 50, 0, 5),
       ];
 
       alignFramesVertically(frames);
 
       expect(frames.map((f) => f.offset)).toStrictEqual([
-        create_pos_rect(0, 0, 0, 0),
-        create_pos_rect(0, 5, 0, 0),
-        create_pos_rect(0, 0, 0, 0),
-        create_pos_rect(0, 5, 0, 0),
+        point(0, 0),
+        point(0, 5),
+        point(0, 0),
+        point(0, 5),
       ]);
     });
   });

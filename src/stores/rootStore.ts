@@ -6,6 +6,7 @@ import {
   getFramesSize,
   orderRects,
 } from "lib/blob-detection";
+import { SetStateAction } from "react";
 
 const rootState = {
   sheets: [] as Sheet[],
@@ -69,20 +70,20 @@ const rootStore = combine(rootState, (set, get) => ({
     return true;
   },
 
-  updateAnimation(update: Partial<Frames>): boolean {
+  updateAnimation(update: SetStateAction<Partial<Frames>>): boolean {
     const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
     if (!sheet) return false;
     const anim = sheet.animations[get().selectedAnimation];
     if (!anim) return false;
 
-    sheet.animations[get().selectedAnimation] = { ...anim, ...update };
+    sheet.animations[get().selectedAnimation] = resolveState(anim, update);
 
     set({ sheets: get().sheets });
 
     return true;
   },
 
-  updateFrame(update: Partial<Frame>): boolean {
+  updateFrame(update: SetStateAction<Partial<Frame>>): boolean {
     const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
     if (!sheet) return false;
     const anim = sheet.animations[get().selectedAnimation];
@@ -90,7 +91,7 @@ const rootStore = combine(rootState, (set, get) => ({
     const frame = anim.frames[anim.editor.frameNo];
     if (!frame) return false;
 
-    anim.frames[anim.editor.frameNo] = { ...frame, ...update };
+    anim.frames[anim.editor.frameNo] = resolveState(frame, update);
 
     set({ sheets: get().sheets });
 
@@ -98,13 +99,13 @@ const rootStore = combine(rootState, (set, get) => ({
   },
 
   // Specific display control
-  setAnimationEditor(editor: Partial<FramesEditor>): boolean {
+  setAnimationEditor(editor: SetStateAction<Partial<FramesEditor>>): boolean {
     const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
     if (!sheet) return false;
     const anim = sheet.animations[get().selectedAnimation];
     if (!anim) return false;
 
-    anim.editor = { ...anim.editor, ...editor };
+    anim.editor = resolveState(anim.editor, editor);
     set({ sheets: get().sheets });
 
     return true;
@@ -114,3 +115,12 @@ const rootStore = combine(rootState, (set, get) => ({
 const useRootStore = create(rootStore);
 
 export default useRootStore;
+
+// Helper function
+
+function resolveState<T>(state: T, setState: SetStateAction<Partial<T>>): T {
+  return {
+    ...state,
+    ...(typeof setState === "function" ? setState(state) : setState),
+  };
+}
