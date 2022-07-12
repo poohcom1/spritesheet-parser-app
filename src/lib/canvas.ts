@@ -39,3 +39,11 @@ export function mouse2scaledCanvas(
     transform.inverse()
   );
 }
+
+export function getImageCanvas(image: ImageData): HTMLCanvasElement {
+  const imgCanvas = document.createElement("canvas");
+  imgCanvas.width = image.width;
+  imgCanvas.height = image.height;
+  imgCanvas.getContext("2d")?.putImageData(image, 0, 0);
+  return imgCanvas;
+}

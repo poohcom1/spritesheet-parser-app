@@ -58,7 +58,7 @@ const rootStore = combine(rootState, (set, get) => ({
     alignFramesVertically(frames);
 
     const animation = {
-      name: name || "Animation #" + sheet.animations.length,
+      name: name || "sprite_" + sheet.animations.length,
       frames,
       size: getFramesSize(frames),
       editor: {

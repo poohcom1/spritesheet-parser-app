@@ -17,6 +17,11 @@ import { useEffect } from "react";
 import useEditorStore from "stores/editorStore";
 import useRootStore from "stores/rootStore";
 import { wrap } from "comlink";
+import {
+  download,
+  framesToSpritesheet,
+  removeExtension as removeFileExtension,
+} from "lib/export";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
@@ -86,11 +91,19 @@ function App() {
     addSheet({
       image,
       rects,
-      name: file.name,
+      name: removeFileExtension(file.name),
       animations: [],
     });
     setLoading(false);
   }, [addSheet]);
+
+  const exportAnimation = useCallback(() => {
+    if (currentAnim && currentSheet)
+      download(
+        framesToSpritesheet(currentAnim, currentSheet.image),
+        currentSheet.name + "_" + currentAnim.name
+      );
+  }, [currentAnim, currentSheet]);
 
   return (
     <AppContainer className="d-flex h-100">
@@ -109,7 +122,9 @@ function App() {
                   Load image...
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item>Export</NavDropdown.Item>
+                <NavDropdown.Item onClick={exportAnimation}>
+                  Export
+                </NavDropdown.Item>
               </NavDropdown>
             </Nav>
           </Navbar.Collapse>

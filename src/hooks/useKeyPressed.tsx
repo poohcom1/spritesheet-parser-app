@@ -11,7 +11,6 @@ type Callback = () => any;
 export default function useKeyPressed(
   targetKey: string,
   onKeyPress: Callback = () => undefined,
-
   allowRepeat = false
 ): boolean {
   const [keyPressed, setKeyPressed] = useState(false);
@@ -24,7 +23,10 @@ export default function useKeyPressed(
 
   const downHandler = useCallback(
     ({ key, repeat }: KeyboardEvent) => {
-      if (key === targetKey && (!repeat || allowRepeat)) {
+      if (
+        key.toLocaleLowerCase() === targetKey.toLocaleLowerCase() &&
+        (!repeat || allowRepeat)
+      ) {
         callbackRef.current();
         setKeyPressed(true);
       }
@@ -33,7 +35,7 @@ export default function useKeyPressed(
   );
   const upHandler = useCallback(
     ({ key }: KeyboardEvent): void => {
-      if (key === targetKey) {
+      if (key.toLocaleLowerCase() === targetKey.toLocaleLowerCase()) {
         setKeyPressed(false);
       }
     },

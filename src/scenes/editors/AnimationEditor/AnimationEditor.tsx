@@ -1,6 +1,6 @@
 import useKeyPressed from "hooks/useKeyPressed";
 import { setFrameOffset } from "lib/sprites";
-import { mouse2scaledCanvas } from "lib/canvas";
+import { getImageCanvas, mouse2scaledCanvas } from "lib/canvas";
 import { wrapi } from "lib/math";
 import {
   FC,
@@ -78,17 +78,17 @@ const AnimationEditor: FC = () => {
 
   useKeyPressed(" ", togglePlaying);
 
-  useKeyPressed("a", () =>
+  useKeyPressed("ArrowLeft", () =>
     setEditor({ frameNo: wrapi(no - 1, 0, anim.frames.length) })
   );
-  useKeyPressed("d", () =>
+  useKeyPressed("ArrowRight", () =>
     setEditor({ frameNo: wrapi(no + 1, 0, anim.frames.length) })
   );
 
-  useKeyPressed("ArrowUp", () => setOffset(0, -1), true);
-  useKeyPressed("ArrowDown", () => setOffset(0, 1), true);
-  useKeyPressed("ArrowLeft", () => setOffset(-1, 0), true);
-  useKeyPressed("ArrowRight", () => setOffset(1, 0), true);
+  useKeyPressed("W", () => setOffset(0, -1), true);
+  useKeyPressed("S", () => setOffset(0, 1), true);
+  useKeyPressed("A", () => setOffset(-1, 0), true);
+  useKeyPressed("D", () => setOffset(1, 0), true);
 
   // Action var
   const [showOnionSkin, setShowOnionSkin] = useState(false);
@@ -107,13 +107,7 @@ const AnimationEditor: FC = () => {
   const size = anim.size;
 
   // Init
-  const imageCanvas = useMemo(() => {
-    const imgCanvas = document.createElement("canvas");
-    imgCanvas.width = image.width;
-    imgCanvas.height = image.height;
-    imgCanvas.getContext("2d")?.putImageData(image, 0, 0);
-    return imgCanvas;
-  }, [image]);
+  const imageCanvas = useMemo(() => getImageCanvas(image), [image]);
 
   // Animation
   const intervalRef = useRef<NodeJS.Timer | undefined>();
