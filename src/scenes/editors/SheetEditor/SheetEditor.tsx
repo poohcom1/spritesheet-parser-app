@@ -4,7 +4,7 @@ import { FaUndo as UndoIcon, FaRedo as RedoIcon } from "react-icons/fa";
 import Editor, { PanelContainer, PanelSection } from "../Editor";
 import SelectionCanvas from "./SelectionCanvas";
 import { Button, ButtonGroup } from "react-bootstrap";
-import { mergeRects } from "lib/blob-detection";
+import { mergeRects } from "lib/sprites";
 import useHistory from "hooks/useHistory";
 import useChangeDetector from "hooks/useChangeDetector";
 import useRootStore from "stores/rootStore";

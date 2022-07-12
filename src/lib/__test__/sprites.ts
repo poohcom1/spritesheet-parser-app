@@ -1,7 +1,7 @@
 import { Rect } from "blob-detection-ts";
-import { alignFramesVertically, orderRects } from "../blob-detection";
+import { alignFramesVertically, orderRects } from "../sprites";
 
-describe("blob-detection", () => {
+describe("sprites", () => {
   describe(orderRects.name, () => {
     it("should correctly order a straight row of rects", () => {
       const rect1 = new Rect(0, 0, 2, 2);

@@ -1,5 +1,5 @@
 import useKeyPressed from "hooks/useKeyPressed";
-import { setFrameOffset } from "lib/blob-detection";
+import { setFrameOffset } from "lib/sprites";
 import { mouse2scaledCanvas } from "lib/canvas";
 import { wrapi } from "lib/math";
 import {

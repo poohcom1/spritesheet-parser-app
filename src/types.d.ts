@@ -19,10 +19,10 @@ interface Sheet {
   image: ImageData;
   rects: Rect[];
   name: string;
-  animations: Frames[];
+  animations: Anim[];
 }
 
-interface Frames {
+interface Anim {
   name: string;
   frames: Frame[];
   padding: Point;

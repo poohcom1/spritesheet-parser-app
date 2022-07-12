@@ -136,7 +136,7 @@ export function getFramesSize(frames: Frame[]): {
 export function setFrameOffset(
   dx: number,
   dy: number,
-  anim: Frames,
+  anim: Anim,
   frameNo: number
 ) {
   const frame = anim.frames[frameNo];

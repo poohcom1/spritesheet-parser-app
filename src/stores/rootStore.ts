@@ -1,11 +1,7 @@
 import create from "zustand";
 import { combine } from "zustand/middleware";
 import { Rect } from "blob-detection-ts";
-import {
-  alignFramesVertically,
-  getFramesSize,
-  orderRects,
-} from "lib/blob-detection";
+import { alignFramesVertically, getFramesSize, orderRects } from "lib/sprites";
 import { SetStateAction } from "react";
 
 const rootState = {
@@ -18,7 +14,7 @@ const rootStore = combine(rootState, (set, get) => ({
   getSheet(): Sheet | undefined {
     return get().sheets[get().selectedSheet];
   },
-  getAnimation(): Frames | undefined {
+  getAnimation(): Anim | undefined {
     return get().sheets[get().selectedSheet]?.animations[
       get().selectedAnimation
     ];
@@ -70,7 +66,7 @@ const rootStore = combine(rootState, (set, get) => ({
     return true;
   },
 
-  updateAnimation(update: SetStateAction<Partial<Frames>>): boolean {
+  updateAnimation(update: SetStateAction<Partial<Anim>>): boolean {
     const sheet: Sheet | undefined = get().sheets[get().selectedSheet];
     if (!sheet) return false;
     const anim = sheet.animations[get().selectedAnimation];
