@@ -247,15 +247,15 @@ const AnimationEditor: FC = () => {
             f.view.y,
             f.view.width,
             f.view.height,
-            f.offset.x + anim.padding.x,
-            f.offset.y + anim.padding.y,
+            f.offset.x,
+            f.offset.y,
             f.view.width,
             f.view.height
           );
       }
 
-      ctx.canvas.width = size.width + anim.padding.x * 2;
-      ctx.canvas.height = size.height + anim.padding.y * 2;
+      ctx.canvas.width = size.width;
+      ctx.canvas.height = size.height;
 
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
@@ -403,8 +403,7 @@ const AnimationEditor: FC = () => {
                 {Math.floor(mousePos.y) - 1})
               </p> */}
               <p>
-                Offsets: ({frame.offset.x + anim.padding.x},{" "}
-                {frame.offset.y + anim.padding.y})
+                Offsets: ({frame.offset.x}, {frame.offset.y})
               </p>
               <div className="d-flex justify-content-center w-100">
                 <DPad

@@ -1,13 +1,23 @@
 import create from "zustand";
 import { combine } from "zustand/middleware";
 import { Rect } from "blob-detection-ts";
-import { alignFramesVertically, getFramesSize, orderRects } from "lib/sprites";
+import {
+  alignFramesVertically,
+  getFramesSize,
+  orderRects,
+  resize,
+} from "lib/sprites";
 import { SetStateAction } from "react";
 
 const rootState = {
   sheets: [] as Sheet[],
   selectedSheet: -1,
   selectedAnimation: -1,
+};
+
+const DEFAULT_PADDING = {
+  width: 10,
+  height: 10,
 };
 
 const rootStore = combine(rootState, (set, get) => ({
@@ -47,19 +57,24 @@ const rootStore = combine(rootState, (set, get) => ({
 
     alignFramesVertically(frames);
 
-    sheet.animations.push({
+    const animation = {
       name: name || "Animation #" + sheet.animations.length,
       frames,
-      padding: { x: 5, y: 5 },
       size: getFramesSize(frames),
-
       editor: {
         zoom: 0,
         fps: 12,
         playing: true,
         frameNo: 0,
       },
+    };
+
+    resize(animation, {
+      width: animation.size.width + DEFAULT_PADDING.width * 2,
+      height: animation.size.height + DEFAULT_PADDING.height * 2,
     });
+
+    sheet.animations.push(animation);
 
     set({ sheets: [...get().sheets] });
 

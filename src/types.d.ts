@@ -25,7 +25,6 @@ interface Sheet {
 interface Anim {
   name: string;
   frames: Frame[];
-  padding: Point;
   size: Size;
 
   editor: FramesEditor;

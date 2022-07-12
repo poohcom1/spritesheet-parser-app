@@ -59,8 +59,8 @@ export async function getImageData(file: File): Promise<ImageData> {
     image.onload = () => {
       const canvas = document.createElement("canvas");
 
-      canvas.width = image.width;
-      canvas.height = image.height;
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
 
       const context = canvas.getContext("2d");
 

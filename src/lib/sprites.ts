@@ -108,7 +108,10 @@ export function alignFramesVertically(frames: Frame[]) {
   }
 }
 
-export function getFramesSize(frames: Frame[]): {
+export function getFramesSize(
+  frames: Frame[],
+  padding: Size = { width: 0, height: 0 }
+): {
   width: number;
   height: number;
 } {
@@ -121,14 +124,34 @@ export function getFramesSize(frames: Frame[]): {
   }
 
   return {
-    width,
-    height,
+    width: width + padding.width,
+    height: height + padding.height,
   };
 }
 
 /**
+ * Resize and center animation
+ * @param animation
+ * @param newSize
+ */
+export function resize(animation: Anim, newSize: Size): void {
+  const deltaSize = {
+    width: newSize.width - animation.size.width,
+    height: newSize.height - animation.size.height,
+  };
+
+  animation.frames.forEach((frame) => {
+    frame.offset.x = frame.offset.x + deltaSize.width / 2;
+    frame.offset.y = frame.offset.y + deltaSize.height / 2;
+  });
+
+  animation.size = newSize;
+}
+
+/**
  *
- * @param offsets
+ * @param dx
+ * @param dy
  * @param anim
  * @param frameNo
  * @returns Overflow on each axis
@@ -141,11 +164,11 @@ export function setFrameOffset(
 ) {
   const frame = anim.frames[frameNo];
 
-  const minX = -anim.padding.x;
-  const maxX = anim.padding.x + anim.size.width - frame.view.width;
+  const minX = 0;
+  const maxX = anim.size.width - frame.view.width;
 
-  const minY = -anim.padding.y;
-  const maxY = anim.padding.y + anim.size.height - frame.view.height;
+  const minY = 0;
+  const maxY = anim.size.height - frame.view.height;
 
   frame.offset.x = Math.min(
     Math.max(minX, Math.round(frame.offset.x + dx)),
