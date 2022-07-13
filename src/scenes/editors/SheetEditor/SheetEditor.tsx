@@ -68,7 +68,7 @@ const SheetEditor: FC = () => {
           <PanelContainer title="Sheet Inspector">
             <PanelSection header="Animation">
               <Button
-                variant="secondary"
+                variant="primary"
                 className="w-100"
                 title={
                   selected.length === 0

@@ -63,6 +63,8 @@ const SelectionCanvas: FC<SelectionCanvasProps> = ({
       imageCtxRef.current = new TransformContext(i_ctx);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (i_ctx as any).webkitImageSmoothingEnabled = false;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (i_ctx as any).webkitImageSmoothingEnabled = false;
       i_ctx.imageSmoothingEnabled = false;
     }
     if (r_ctx && !rectsCtxRef.current) {

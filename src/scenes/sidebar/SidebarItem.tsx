@@ -1,41 +1,39 @@
-import { FC } from "react";
-import { Button } from "react-bootstrap";
-import AccordionBody from "react-bootstrap/esm/AccordionBody";
-import AccordionHeader from "react-bootstrap/esm/AccordionHeader";
-import AccordionItem from "react-bootstrap/esm/AccordionItem";
+import { FC, useCallback, useState } from "react";
+import { Collapse } from "react-bootstrap";
+import styled from "styled-components";
 import { BsFillFileSpreadsheetFill as SheetIcon } from "react-icons/bs";
 import { MdOutlineAnimation as AnimIcon } from "react-icons/md";
-import styled from "styled-components";
+import { MdArrowForwardIos as CollapseIcon } from "react-icons/md";
 import useRootStore from "stores/rootStore";
 
-const ClearButton = styled.a`
-  text-decoration: none;
-
-  color: white;
-  background-color: transparent;
-  border: none;
-  border-radius: 5px;
-
-  margin: 0;
-  padding: 8px;
-
-  width: fit-content;
-  height: 50px;
-
+const SheetItem = styled.div<{ selected: boolean }>`
   display: flex;
   align-items: center;
+  color: white;
+  background-color: var(
+    ${(props) => (props.selected ? "--bs-gray-dark" : "--bs-dark")}
+  );
+  padding: 16px;
 
   &:hover {
-    background-color: #99999955;
-  }
-
-  &:active {
-    background-color: #99999999;
+    background-color: var(--bs-gray-dark);
   }
 `;
 
-const CustomAccordianHeader = styled(AccordionHeader)`
-  background-color: black;
+const ArrowIcon = styled(CollapseIcon)<{ collapsed: boolean }>`
+  margin-left: auto;
+  transform: rotate(${(props) => (props.collapsed ? "90deg" : "-90deg")});
+  transition: transform 0.2s;
+
+  border-radius: 5px;
+
+  &:hover {
+    background-color: var(--bs-gray-dark);
+  }
+`;
+
+const AnimItem = styled(SheetItem)`
+  padding-left: 32px;
 `;
 
 interface SidebarItemProps {
@@ -47,54 +45,46 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
   const selectSheet = useRootStore((s) => s.selectSheet);
   const selectAnim = useRootStore((s) => s.selectAnimation);
 
-  const selectedSheet = useRootStore((s) => s.selectedSheet);
-  const selectedAnimation = useRootStore((s) => s.selectedAnimation);
+  const selectedSheet = useRootStore((s) => s.getSheet());
+  const selectedAnimation = useRootStore((s) => s.getAnimation());
 
-  const isSelectedAnim = (anim: number) =>
-    selectedSheet === sheetInd && anim === selectedAnimation;
+  const isSelectedAnim = useRootStore(
+    useCallback(
+      (s) => (anim: number) =>
+        s.selectedSheet === sheetInd && s.selectedAnimation === anim,
+      [sheetInd]
+    )
+  );
+
+  const [open, setOpen] = useState(true);
 
   return (
-    <AccordionItem className="p-0 bg-dark h-25" eventKey={`${sheetInd}`}>
-      <CustomAccordianHeader bsPrefix="">
-        <ClearButton
-          style={{
-            color: "var(--primary)",
-            padding: "4px",
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            selectSheet(sheetInd);
-          }}
-          className={`m-0 ${
-            selectedSheet === sheetInd &&
-            selectedAnimation === -1 &&
-            "text-decoration-underline"
-          }`}
-        >
-          <SheetIcon className="me-2" />
-          {sheet.name}
-        </ClearButton>
-      </CustomAccordianHeader>
-      <AccordionBody className="text-white bg-dark h-25 p-0">
-        {sheet.animations.length ? (
-          <>
-            {sheet.animations.map((anim, i) => (
-              <Button
-                className={`btn-block w-100 m-0 ${isSelectedAnim(i)}`}
-                onClick={() => selectAnim(sheetInd, i)}
-                variant={isSelectedAnim(i) ? "light" : "dark"}
-                key={anim.name}
-              >
-                <AnimIcon className="me-1" />
-                {anim.name}
-              </Button>
-            ))}
-          </>
-        ) : (
-          <p className="m-0 me-3 text-white-50 text-end">No animations yet</p>
-        )}
-      </AccordionBody>
-    </AccordionItem>
+    <>
+      <SheetItem
+        selected={selectedSheet === sheet && !selectedAnimation}
+        onClick={() => selectSheet(sheetInd)}
+      >
+        <SheetIcon className="me-2" />
+        {sheet.name}
+        <ArrowIcon collapsed={open} onClick={() => setOpen(!open)}>
+          <CollapseIcon className="m-2" />
+        </ArrowIcon>
+      </SheetItem>
+      <Collapse in={open}>
+        <div>
+          {sheet.animations.map((anim, i) => (
+            <AnimItem
+              key={i}
+              selected={isSelectedAnim(i)}
+              onClick={() => selectAnim(sheetInd, i)}
+            >
+              <AnimIcon className="me-2" />
+              {anim.name}
+            </AnimItem>
+          ))}
+        </div>
+      </Collapse>
+    </>
   );
 };
 
