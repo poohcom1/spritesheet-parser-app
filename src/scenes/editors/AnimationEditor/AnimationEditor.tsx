@@ -12,13 +12,7 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  Button,
-  ButtonGroup,
-  FormCheck,
-  FormControl,
-  FormLabel,
-} from "react-bootstrap";
+import { Button, ButtonGroup, FormCheck } from "react-bootstrap";
 import {
   AiFillPauseCircle,
   AiFillPlayCircle,
@@ -28,8 +22,8 @@ import {
 import useEditorStore from "stores/editorStore";
 import useRootStore from "stores/rootStore";
 import Editor, { PanelContainer, PanelSection } from "../Editor";
-import DPad from "./DPad";
 import IntegerInput from "components/IntegerInput/IntegerInput";
+import RangeSlider from "./RangeSlider";
 
 function getScale(zoom: number) {
   return Math.pow(1.1, zoom * 2);
@@ -77,17 +71,17 @@ const AnimationEditor: FC = () => {
 
   useKeyPressed(" ", togglePlaying);
 
-  useKeyPressed("ArrowLeft", () =>
+  useKeyPressed("a", () =>
     setEditor({ frameNo: wrapi(no - 1, 0, anim.frames.length) })
   );
-  useKeyPressed("ArrowRight", () =>
+  useKeyPressed("d", () =>
     setEditor({ frameNo: wrapi(no + 1, 0, anim.frames.length) })
   );
 
-  useKeyPressed("W", () => setOffset(0, -1), true);
-  useKeyPressed("S", () => setOffset(0, 1), true);
-  useKeyPressed("A", () => setOffset(-1, 0), true);
-  useKeyPressed("D", () => setOffset(1, 0), true);
+  useKeyPressed("ArrowUp", () => setOffset(0, -1), true);
+  useKeyPressed("ArrowDown", () => setOffset(0, 1), true);
+  useKeyPressed("ArrowLeft", () => setOffset(-1, 0), true);
+  useKeyPressed("ArrowRight", () => setOffset(1, 0), true);
 
   // Action var
   const [showOnionSkin, setShowOnionSkin] = useState(false);
@@ -264,16 +258,16 @@ const AnimationEditor: FC = () => {
       ctx.globalAlpha = 1.0;
       drawFrame(frame);
 
-      if ((showOnionSkin || shiftKey) && !ctrlKey) {
+      if (
+        (onionSkin.left < 0 || onionSkin.right > 0) &&
+        (showOnionSkin || shiftKey) &&
+        !ctrlKey
+      ) {
         ctx.globalAlpha = 0.2;
         for (let i = 0; i < anim.frames.length; i++) {
           if (
-            inRange(
-              i,
-              no + onionSkin.left,
-              no + onionSkin.right,
-              anim.frames.length
-            )
+            inRange(i, no + onionSkin.left, no, anim.frames.length) ||
+            inRange(i, no, no + onionSkin.right, anim.frames.length)
           ) {
             drawFrame(anim.frames[i]);
           }
@@ -384,7 +378,7 @@ const AnimationEditor: FC = () => {
               <p>
                 Offsets: ({frame.offset.x}, {frame.offset.y})
               </p>
-              <div className="d-flex justify-content-center w-100">
+              {/* <div className="d-flex justify-content-center w-100">
                 <DPad
                   onLeft={() => setOffset(-1, 0)}
                   onUp={() => setOffset(0, -1)}
@@ -395,43 +389,32 @@ const AnimationEditor: FC = () => {
                   onDownLeft={() => setOffset(-1, +1)}
                   onDownRight={() => setOffset(+1, +1)}
                 />
-              </div>
-              <FormCheck
-                label="Onion skin"
-                id="onionSkinCheck"
-                value={showOnionSkin ? 1 : 0}
-                onChange={() => setShowOnionSkin(!showOnionSkin)}
-                onKeyDown={overrideKey}
-              />
-              <div className="d-flex">
-                <FormLabel>Left:</FormLabel>
-                <FormControl
-                  type="number"
-                  value={onionSkin.left}
-                  onChange={(e) =>
-                    setOnionSkin({
-                      left: parseInt(e.target.value),
-                      right: onionSkin.right,
-                    })
-                  }
-                  min={-Math.ceil((anim.frames.length - 1) / 2)}
-                  max={0}
-                />
-                <FormLabel>Right:</FormLabel>
-                <FormControl
-                  type="number"
-                  value={onionSkin.right}
-                  onChange={(e) =>
-                    setOnionSkin({
-                      left: onionSkin.left,
-                      right: parseInt(e.target.value),
-                    })
-                  }
-                  min={0}
-                  max={Math.ceil(anim.frames.length / 2) - 1}
-                />
-              </div>
+              </div> */}
             </PanelSection>
+            {anim.frames.length > 1 && (
+              <PanelSection header="Onion Skin">
+                <FormCheck
+                  label="Show"
+                  className="flex-row-reverse form-switch"
+                  id="onionSkinCheck"
+                  value={showOnionSkin ? 1 : 0}
+                  onChange={() => setShowOnionSkin(!showOnionSkin)}
+                  onKeyDown={overrideKey}
+                />
+                <RangeSlider
+                  left={onionSkin.left}
+                  right={onionSkin.right}
+                  onChange={({ left, right }) =>
+                    setOnionSkin({
+                      left,
+                      right,
+                    })
+                  }
+                  min={-Math.ceil(anim.frames.length)}
+                  max={Math.ceil(anim.frames.length) - 1}
+                />
+              </PanelSection>
+            )}
           </PanelContainer>
         }
       />

@@ -32,10 +32,10 @@ const Panel = styled.div`
 
 export const PanelSectionHeader: FC<{ text: string }> = ({ text = "" }) => {
   return (
-    <div className="d-flex">
-      <hr className="me-2 w-100 flex-grow-1 text-white" />
-      <p className="m-0 text-white-50 text-sm">{text}</p>
-      <hr className="ms-2 w-100 flex-grow-1 text-white" />
+    <div className="d-flex align-items-center">
+      <hr className="m-0 me-2 w-100 flex-grow-1 text-white" />
+      <p className="m-0 text-white-50 text-sm text-nowrap">{text}</p>
+      <hr className="m-0 ms-2 w-100 flex-grow-1 text-white" />
     </div>
   );
 };

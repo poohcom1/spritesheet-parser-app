@@ -22,21 +22,23 @@ export default function useKeyPressed(
   }, [onKeyPress]);
 
   const downHandler = useCallback(
-    ({ key, repeat }: KeyboardEvent) => {
+    ({ preventDefault, key, repeat }: KeyboardEvent) => {
       if (
         key.toLocaleLowerCase() === targetKey.toLocaleLowerCase() &&
         (!repeat || allowRepeat)
       ) {
         callbackRef.current();
         setKeyPressed(true);
+        preventDefault();
       }
     },
     [allowRepeat, targetKey]
   );
   const upHandler = useCallback(
-    ({ key }: KeyboardEvent): void => {
+    ({ preventDefault, key }: KeyboardEvent): void => {
       if (key.toLocaleLowerCase() === targetKey.toLocaleLowerCase()) {
         setKeyPressed(false);
+        preventDefault();
       }
     },
     [targetKey]
