@@ -24,13 +24,12 @@ import {
   AiFillPlayCircle,
   AiFillStepBackward,
   AiFillStepForward,
-  AiOutlineMinus,
-  AiOutlinePlus,
 } from "react-icons/ai";
 import useEditorStore from "stores/editorStore";
 import useRootStore from "stores/rootStore";
 import Editor, { PanelContainer, PanelSection } from "../Editor";
 import DPad from "./DPad";
+import IntegerInput from "components/IntegerInput/IntegerInput";
 
 function getScale(zoom: number) {
   return Math.pow(1.1, zoom * 2);
@@ -362,31 +361,17 @@ const AnimationEditor: FC = () => {
                   </Button>
                 </ButtonGroup>
               </div>
-              <FormLabel htmlFor="fps" className="me-2">
-                FPS:
-              </FormLabel>
-              <ButtonGroup>
-                <Button
-                  onClick={() => setEditor({ fps: Math.max(fps - 1, 1) })}
-                >
-                  <AiOutlineMinus />
-                </Button>
-                <FormControl
-                  id="fps"
-                  style={{ width: "50px", borderRadius: 0 }}
-                  type="text"
-                  inputMode="numeric"
+              <div className="d-flex">
+                <span className="me-2 align-middle">FPS:</span>
+
+                <IntegerInput
                   min={1}
                   max={120}
                   value={fps}
-                  onChange={(e) => setEditor({ fps: parseInt(e.target.value) })}
+                  onChange={(fps) => setEditor({ fps })}
                 />
-                <Button
-                  onClick={() => setEditor({ fps: Math.min(fps + 1, 120) })}
-                >
-                  <AiOutlinePlus />
-                </Button>
-              </ButtonGroup>
+              </div>
+
               <p>
                 Frame: {no + 1} / {anim.frames.length}
               </p>
