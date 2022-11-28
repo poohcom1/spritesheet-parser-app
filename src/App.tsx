@@ -22,6 +22,7 @@ import {
   framesToSpritesheet,
   removeExtension as removeFileExtension,
 } from "lib/export";
+import InputModal, { useInputModal } from "components/InputModal/InputModal";
 
 const HEADER_SIZE = 5;
 const TOOLBAR_SIZE = 7;
@@ -70,6 +71,7 @@ function App() {
   const zoomOut = useEditorStore((s) => s.zoomOut);
   const setHeight = useEditorStore((s) => s.setHeight);
 
+  const [, setShowUrlInput] = useInputModal();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -82,7 +84,9 @@ function App() {
     if (!file) return;
 
     setLoading(true);
-    const image = await getImageData(file);
+    const url = URL.createObjectURL(file);
+
+    const image = await getImageData(url, () => URL.revokeObjectURL(url));
     const rects = (await blobDetection(image)).map(
       (raw) =>
         new Rect(raw.left, raw.top, raw.right - raw.left, raw.bottom - raw.top)
@@ -97,6 +101,42 @@ function App() {
     setLoading(false);
   }, [addSheet]);
 
+  const loadUrl = useCallback(
+    async (url: string) => {
+      try {
+        const name = new URL(url).pathname;
+
+        setLoading(true);
+
+        const imageRes = await fetch("/api/load-image?url=" + url);
+        const { buffer }: LoadImageResponse = await imageRes.json();
+
+        const image = await getImageData(`data:image/png;base64,${buffer}`);
+        const rects = (await blobDetection(image)).map(
+          (raw) =>
+            new Rect(
+              raw.left,
+              raw.top,
+              raw.right - raw.left,
+              raw.bottom - raw.top
+            )
+        );
+
+        addSheet({
+          image,
+          rects,
+          name,
+          animations: [],
+        });
+      } catch (e) {
+        alert("Couldn't load image from url: " + url);
+        console.error(e);
+      }
+      setLoading(false);
+    },
+    [addSheet]
+  );
+
   const exportAnimation = useCallback(() => {
     if (currentAnim && currentSheet)
       download(
@@ -107,6 +147,7 @@ function App() {
 
   return (
     <AppContainer className="d-flex h-100">
+      <InputModal onSubmit={loadUrl} />
       <Sidebar />
       <MainContainer>
         <HeaderBar variant="dark" bg="dark" expand>
@@ -119,7 +160,10 @@ function App() {
                 menuVariant="dark"
               >
                 <NavDropdown.Item onClick={loadFile}>
-                  Load image...
+                  Load file...
+                </NavDropdown.Item>
+                <NavDropdown.Item onClick={() => setShowUrlInput(true)}>
+                  Load from url...
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
                 <NavDropdown.Item onClick={exportAnimation}>

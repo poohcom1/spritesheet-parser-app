@@ -27,7 +27,17 @@ export function blobDetection(
     image.width,
     image.height
   );
-  const binaryImgData = getBinaryImage(imgData);
+
+  const binaryImgData = getBinaryImage(
+    imgData,
+    // BG-color
+    [image.data[0], image.data[1], image.data[2]],
+    // Replace color
+    [255, 255, 255]
+  );
+
+  console.log([image.data[0], image.data[1], image.data[2]]);
+
   const mser = new MSER(options);
 
   let rects = mser.extract(binaryImgData).map((r) => r.rect);

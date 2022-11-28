@@ -14,6 +14,7 @@ const SheetItem = styled.div<{ selected: boolean }>`
     ${(props) => (props.selected ? "--bs-gray-dark" : "--bs-dark")}
   );
   padding: 16px;
+  user-select: none;
 
   &:hover {
     background-color: var(--bs-gray-dark);
@@ -34,6 +35,7 @@ const ArrowIcon = styled(CollapseIcon)<{ collapsed: boolean }>`
 
 const AnimItem = styled(SheetItem)`
   padding-left: 32px;
+  user-select: none;
 `;
 
 interface SidebarItemProps {
@@ -66,7 +68,10 @@ const SidebarItem: FC<SidebarItemProps> = ({ sheet, sheetInd }) => {
       >
         <SheetIcon className="me-2" />
         {sheet.name}
-        <ArrowIcon collapsed={open} onClick={() => setOpen(!open)}>
+        <ArrowIcon
+          collapsed={`${open}` as unknown as boolean}
+          onClick={() => setOpen(!open)}
+        >
           <CollapseIcon className="m-2" />
         </ArrowIcon>
       </SheetItem>

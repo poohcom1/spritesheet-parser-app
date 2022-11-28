@@ -42,3 +42,8 @@ interface FramesEditor {
 
   frameNo: number;
 }
+
+// API
+interface LoadImageResponse {
+  buffer: string;
+}

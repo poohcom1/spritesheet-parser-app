@@ -50,8 +50,10 @@ export function getBinaryImage(
   return bi;
 }
 
-export async function getImageData(file: File): Promise<ImageData> {
-  const url = URL.createObjectURL(file);
+export async function getImageData(
+  url: string,
+  onFinish: () => void = () => null
+): Promise<ImageData> {
   const image = new Image();
   image.src = url;
 
@@ -70,13 +72,13 @@ export async function getImageData(file: File): Promise<ImageData> {
       }
 
       context.drawImage(image, 0, 0);
-      URL.revokeObjectURL(url);
+      onFinish();
 
       res(context.getImageData(0, 0, canvas.width, canvas.height));
     };
 
     image.onerror = (e) => {
-      URL.revokeObjectURL(url);
+      onFinish();
       rej(e);
     };
   });
